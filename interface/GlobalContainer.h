@@ -42,6 +42,7 @@ private:
 };
 
 // ----------------------------- TEMPLATE CODE --------------------------
+// ----------------------------- must be placed in .h -------------------
 
 template <class T>
 int GlobalContainer::SetEntry(string name,T value,string type)

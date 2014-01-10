@@ -1,4 +1,6 @@
 
+#include "TFile.h"
+
 #define Unfolding_cxx
 #include "interface/Unfolding.h"
 #include <assert.h>
@@ -64,6 +66,15 @@ int Unfolding::LoopOverGen(){
 		if (pho1 <0 || pho2 < 0) continue; 
 		TLorentzVector hgg = Container.GetEntry<TLorentzVector>("gp_p4")[pho1] + Container.GetEntry<TLorentzVector>("gp_p4")[pho2];
 
+		//get xsWeight: fileName & xsWeight
+		string fName=tGen->GetCurrentFile()->GetName();	
+		//remove /*
+		size_t n=fName.rfind('/');
+		assert(n != string::npos);
+		fName=fName.erase(n);
+		assert( xSecWeight.find(fName) != xSecWeight.end() );	
+		float xsweight=xSecWeight[fName];
+
 		bool isGen=true;
 		// ph. sp. selection on photons 
 		if (isGen){
@@ -73,7 +84,7 @@ int Unfolding::LoopOverGen(){
 			TH1D *default_th1d=new TH1D(name.c_str(),name.c_str(),100,0.,100.);
 		       	Container.SetEntry(name,default_th1d,"TH1D");
 			}
-		   Container.GetEntryPtr<TH1D>(name)->Fill(hgg.Pt());
+		   Container.GetEntryPtr<TH1D>(name)->Fill(hgg.Pt(),xsweight); //weight  -> xsWeight
 		//fill matrix and reco(no corrections for bkg);
 		//do the matching to the photons 
 		} //end ph. sp. selection on gen photons
@@ -97,7 +108,7 @@ int Unfolding::LoopOverGen(){
 				TH2D *default_th2d=new TH2D(name.c_str(),name.c_str(),100,0.,100.,100,0.,100.);
 		       		Container.SetEntry(name,default_th2d,"TH2D");
 				}
-			   Container.GetEntryPtr<TH2D>(name)->Fill( hgg.Pt() , reco->second.hgg.Pt() );
+			   Container.GetEntryPtr<TH2D>(name)->Fill( hgg.Pt() , reco->second.hgg.Pt() , reco->second.weight); 
 			}
 		//fill reco histo
 			string name="reco_hgg_pt";
@@ -107,7 +118,7 @@ int Unfolding::LoopOverGen(){
 				TH1D *default_th1d=new TH1D(name.c_str(),name.c_str(),100,0.,100.);
 				Container.SetEntry(name,default_th1d,"TH1D");
 				}
-			Container.GetEntryPtr<TH1D>(name)->Fill(reco->second.hgg.Pt());
+			Container.GetEntryPtr<TH1D>(name)->Fill(reco->second.hgg.Pt(),reco->second.weight); 
 			} //exists reco and matched to gen level
 
 		}//loop over gen entries
@@ -182,6 +193,8 @@ int Unfolding::LoopOverReco(){
 			float pho2_eta_=-999;
 			float pho2_phi_=-999;
 			int cat_=-999;
+			float weight_=1;
+			float xsweight_=-999;
 			while (sscanf(line,"\t%s:%lf%n",branch,&value,&n) != EOF )
 				{
 				if( string(branch) == "run") run_=value ;
@@ -194,6 +207,8 @@ int Unfolding::LoopOverReco(){
 				if( string(branch) == "pho2_eta") pho2_eta_=value;
 				if( string(branch) == "pho2_phi") pho2_phi_=value;
 				if( string(branch) == "cat") cat_=value;
+				if( string(branch) == "fullweight") weight_=value; //not in txt yet
+				if( string(branch) == "xsweight") xsweight_=value; //not in txt yet
 				}
 			TLorentzVector pho1,pho2,hgg; 
 			float t=TMath::Exp(-pho1_eta_);
@@ -202,8 +217,21 @@ int Unfolding::LoopOverReco(){
 			pho2.SetPtEtaPhiM(pho2_e_ * 2*t/(1+t*t),pho2_eta_,pho2_phi_,0);
 
 			hgg=pho1+pho2;
-			RecoInfo A(hgg,pho1,pho2,cat_);
+			RecoInfo A(hgg,pho1,pho2,cat_,weight_);
 			recoEvents[event_]=A;
+			if(xsweight_>0)
+				{
+				string fName=*iFile;// remove /* save in the map
+				size_t n=fName.rfind('/');
+				if( n != string::npos)
+				{
+					fName=fName.erase(n);
+					xSecWeight[fName]=xsweight_;
+				}//exists n
+				
+				}
+			assert(weight_>0);
+			assert(xsweight_>0);
 
 			} // loop over lines in one file
 		fclose(fr);

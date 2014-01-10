@@ -66,7 +66,7 @@ libUnfolding.$(DllSuf): $(ObjFiles)
 %.$(ObjSuf): %.d
 
 #implicit rules
-$(BINDIR)/%.$(ObjSuf): 
+$(BINDIR)/%.$(ObjSuf): $(SRCDIR)/*.$(SrcSuf)
 	@echo compiling $@
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ $(SRCDIR)/$*.$(SrcSuf)
 

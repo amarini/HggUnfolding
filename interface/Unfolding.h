@@ -28,11 +28,12 @@ using namespace std;
 class RecoInfo{ 
 public:
 	//costructor
-	RecoInfo(){cat=-1;hgg.SetPxPyPzE(0,0,0,0);}
-	RecoInfo(TLorentzVector hgg_,TLorentzVector pho1_,TLorentzVector pho2_,int cat_){ hgg=hgg_;pho1=pho1_; pho2=pho2_;cat=cat_;}
+	RecoInfo(){cat=-1;hgg.SetPxPyPzE(0,0,0,0);weight=0;}
+	RecoInfo(TLorentzVector hgg_,TLorentzVector pho1_,TLorentzVector pho2_,int cat_,float w_){ hgg=hgg_;pho1=pho1_; pho2=pho2_;cat=cat_;weight=w_;}
 	//info I need to keep
 	TLorentzVector hgg,pho1,pho2;
 	int cat;
+	float weight;
 };
 
 
@@ -64,6 +65,7 @@ private:
 	GlobalContainer Container;
 	map<unsigned long long int, RecoInfo> recoEvents; // map between EventNum ->  reco info
 	vector<int> catMap;
+	map<string,float> xSecWeight; 
 };
 #endif
 #ifndef Unfolding_cxx
