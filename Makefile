@@ -35,7 +35,7 @@ HEADDIR = $(BASEDIR)/interface
 
 #Packages=GlobalContainer Unfolding
 ## Sort needed for building libraries: LAST <- FIRST
-Packages=Unfolding GlobalContainer
+Packages=Unfolding GlobalContainer MergeAndUnfold
 #ObjFiles=$(foreach Pack, $(Packgaes),   $(BINDIR)/$(Pack).$(ObjSuf) )
 ObjFiles=$(patsubst %, $(BINDIR)/%.$(ObjSuf),$(Packages) )
 
@@ -52,6 +52,7 @@ info:
 
 ##explicit rules
 libUnfolding.$(DllSuf): $(ObjFiles)
+	@echo compiling $@
 	@$(LD) $(SOFLAGS) $(LDFLAGS) $(ObjFiles) -o $@
 
 #$(BINDIR)/Unfolding.o: src/Unfolding.cc interface/Unfoding.h
@@ -66,11 +67,13 @@ libUnfolding.$(DllSuf): $(ObjFiles)
 %.$(ObjSuf): %.d
 
 #implicit rules
-$(BINDIR)/%.$(ObjSuf): $(SRCDIR)/*.$(SrcSuf)
+#$(BINDIR)/%.$(ObjSuf): 
+
+$(BINDIR)/%.$(ObjSuf): $(SRCDIR)/%.$(SrcSuf) $(HEADDIR)/%.$(HeadSuf)
 	@echo compiling $@
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ $(SRCDIR)/$*.$(SrcSuf)
 
 .PHONY: clean
 clean:
-	rm -v $(ObjFiles) || true
-	rm -v libUnfolding.so || true
+	-rm  $(ObjFiles) 
+	-rm  libUnfolding.so 
