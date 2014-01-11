@@ -1,23 +1,151 @@
-
-#ifndef MaU_H
-#define MaU_H
-#include "TH1D.h"
-#include "TH2D.h"
-#include "TH1F.h"
-#include <string>
-using namespace std;
+#include "interface/MergeAndUnfold.h"
 
 
-class MergeAndUnfold{
-public:
 
-private:	
-	vector<TH1D> histos;
+// ---------------------- MACRO THAT DO UNFOLDING --------------
+TVectorD MergeAndUnfold::Unfold(TMatrixD *E){
 
-	vector<TH2D> response;
-	vector<TH1D> gen;
-	vector<TH1D> reco;
+//convert histos in VectorD
+FillVectors();
 
+//construct super matrixes by chaining all the other ones
+TMatrixD S,K;
+TVectorD l,y; 
+
+//Get Unfold distribution
+//l=S.(kS)+ .y
+/* 
+ * |   |   | K1 |+   | y1 |
+ * | l | = | K2 |  . | y2 |
+ * |   |   | K3 |    | y3 |
+ *         | aL |    |  0 |  a=sqrt(Delta) Tickonov Regularization
+ */
+l.ResizeTo(v_g[0].GetNrows());
+int nCat=v_h.size();
+K.ResizeTo( v_g[0].GetNrows() ,nCat * v_r[0].GetNrows() );
+S.ResizeTo( v_r[0].GetNrows() * nCat,  v_r[0].GetNrows() * nCat );
+y.ResizeTo( nCat*v_r[0].GetNrows() );
+//fill K S y
+
+for(int iCat=0;iCat<nCat;iCat++){
+	//K
+	for(int gBin=0;gBin<v_g[0].GetNrows();gBin++)
+	for(int rBin=0;rBin<v_r[0].GetNrows();rBin++)
+		{
+		K(gBin,rBin + v_r[0].GetNrows() * iCat) = v_m[iCat](gBin,rBin);
+		}
+	//S
+	for(int rBin=0;rBin<v_r[0].GetNrows();rBin++)
+	for(int rBin2=0;rBin2<v_r[0].GetNrows();rBin2++)
+		{
+		S(rBin + v_r[0].GetNrows() * iCat,rBin2+ v_r[0].GetNrows() * iCat) = v_s[iCat](rBin,rBin2);
+		}
+	//y
+	for(int rBin=0;rBin<v_r[0].GetNrows();rBin++)
+		{
+		y(rBin + v_r[0].GetNrows() * iCat) = v_h[iCat](rBin);
+		}
+} //loop over categories
+
+//is defined * and + .Invert();
+TMatrixD Kt(K.GetNcols(),K.GetNrows()); Kt.Transpose(K);
+TMatrixD A=Kt*S*K; A.Invert();
+//l=A*Kt*S*y;
+TMatrixD B=A*Kt*S;
+l=B*y;
+
+TMatrixD Bt(B.GetNcols(),B.GetNrows());Bt.Transpose(B);
+TMatrixD cov=B*S*Bt;  //covariance matrix after linear transformation
+
+if(E!=NULL)(*E)=cov;
+//get back a histo
+return l;
 };
 
-#endif
+//------------------ Tools --------------------
+TVectorD MergeAndUnfold::getVector(TH1 *h){
+	TVectorD r;
+	int n=h->GetNbinsX();
+	if (useOverFlow)n+=2;
+	r.ResizeTo(n);
+	int i=0;
+	if(useOverFlow) { r(i) = h->GetBinContent(i);i++;}
+	for(int iBin=1;iBin<=h->GetNbinsX();iBin++)
+		{r(i)=h->GetBinContent(iBin);i++;}
+	if(useOverFlow) { r(i) = h->GetBinContent(h->GetNbinsX()+1);i++;}
+	return r;
+}
+
+TMatrixD MergeAndUnfold::getMatrix(TH2 *h){
+	TMatrixD r;
+	int n=h->GetNbinsX();
+	int m=h->GetNbinsY();
+	if (useOverFlow)n+=2;
+	if (useOverFlow)m+=2;
+	r.ResizeTo(n,m);
+	r.Zero(); //make sure is set to 0
+	if(useOverFlow) 
+	{
+		for(int iBin=1;iBin<=h->GetNbinsX();iBin++)
+		for(int jBin=1;jBin<=h->GetNbinsY();jBin++)
+			r(iBin,jBin)=h->GetBinContent(iBin,jBin);
+	
+	}
+	else{
+		for(int iBin=0;iBin<=h->GetNbinsX()+1;iBin++)
+		for(int jBin=0;jBin<=h->GetNbinsY()+1;jBin++)
+			r(iBin,jBin)=h->GetBinContent(iBin,jBin);
+	}
+	return r;
+}
+TMatrixD MergeAndUnfold::getCovMatrix(TH1 *h){
+	TMatrixD r;
+	int n=h->GetNbinsX();
+	int m=h->GetNbinsY();
+	if (useOverFlow)n+=2;
+	if (useOverFlow)m+=2;
+	r.ResizeTo(n,m);
+	r.Zero(); // make sure is set to 0
+	if(useOverFlow) 
+	{
+		for(int iBin=1;iBin<=h->GetNbinsX();iBin++)
+			r(iBin,iBin)=TMath::Power(h->GetBinError(iBin),2);
+	
+	}
+	else{
+		for(int iBin=0;iBin<=h->GetNbinsX()+1;iBin++)
+			r(iBin,iBin)=TMath::Power(h->GetBinError(iBin),2);
+	}
+	return r;
+}
+
+int MergeAndUnfold::FillVectors()
+{
+	if ( gen.size() != 1 ) return 1;	 // only one gen target
+	if ( histos.size() != matrix.size() ) return 1;	
+	if ( histos.size() != reco.size() ) return 1;	
+	v_h.resize(histos.size());
+	v_g.resize(histos.size());  //for semplicity
+	v_r.resize(histos.size());
+	v_m.resize(histos.size());
+	v_s.resize(histos.size());
+
+	for(size_t i=0;i<histos.size();i++)
+	{
+		v_h[i]=getVector( &histos[i] );
+		v_g[i]=getVector( &gen[0] );
+		v_r[i]=getVector( &reco[i] );
+		v_m[i]=getMatrix( &matrix[i] );
+		v_s[i]=getCovMatrix( &histos[i] );
+	}
+	return 0;	
+}
+
+void MergeAndUnfold::AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp)
+{
+	histos.push_back( *(TH1D*)(h->Clone(Form("histo_cat%d",int(histos.size())))) );
+	if (gen.size()==0)gen.push_back( *(TH1D*)(g->Clone(Form("gen_cat%d", int(gen.size())))) );
+	reco.push_back( *(TH1D*)(r->Clone(Form("reco_cat%d",int(reco.size())))) );
+	matrix.push_back( *(TH2D*)(resp->Clone(Form("matrix_cat%d",int(matrix.size())))) );
+	return;
+}

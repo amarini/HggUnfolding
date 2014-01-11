@@ -1,0 +1,52 @@
+#ifndef MaU_H
+#define MaU_H
+#include "TH1.h"
+#include "TH2.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TH1F.h"
+#include "TMatrix.h"
+#include "TMatrixD.h"
+#include "TVector.h"
+#include "TVectorD.h"
+#include "TDecompSVD.h"
+#include "TMath.h"
+
+#include <string>
+#include <vector>
+#include <map>
+using namespace std;
+
+
+class MergeAndUnfold{
+public:
+	MergeAndUnfold(){useOverFlow=0;}
+	void AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp);
+	void AddReg(double delta){}; //TODO
+	void Reset(){}; //TODO
+	TVectorD Unfold(TMatrixD *E=NULL);
+	void SetOverFlow(){useOverFlow=1;};
+	void UnsetOverFlow(){useOverFlow=0;};
+	int FillVectors();
+
+private:	
+	vector<TH1D> histos;
+
+	vector<TH2D> matrix;
+	vector<TH1D> gen; // only 1
+	vector<TH1D> reco;
+
+	bool useOverFlow;
+	TVectorD getVector(TH1 *h);
+	TMatrixD getMatrix(TH2 *h);
+	TMatrixD getCovMatrix(TH1 *h);
+
+	vector<TVectorD> v_h;
+	vector<TVectorD> v_g;
+	vector<TVectorD> v_r;
+	vector<TMatrixD> v_m;
+	vector<TMatrixD> v_s; //covariance matrix
+
+};
+
+#endif

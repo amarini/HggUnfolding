@@ -3,6 +3,7 @@
 #define GlobalContainer_h
 #include <map>
 #include <vector>
+#include <iostream>
 #include "TLorentzVector.h"
 #include "TH1D.h"
 #include "TH2D.h"
@@ -12,7 +13,7 @@ using namespace std;
 
 class GlobalContainer{
 public:
-	GlobalContainer();
+	GlobalContainer(){};
 	~GlobalContainer();
 	template <class T>
 	int SetEntry(string name,T value,string type="float"); //interfaced to Set Actual value
