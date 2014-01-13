@@ -20,11 +20,12 @@ using namespace std;
 
 class MergeAndUnfold{
 public:
-	MergeAndUnfold(){useOverFlow=0;}
-	void AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp);
-	void AddReg(double delta){}; //TODO
-	void Reset(){}; //TODO
+	MergeAndUnfold(){useOverFlow=0;regIndex=-1;}
+	int AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp); //return catNum on success
+	int AddReg(double delta); 
+	void Reset(); 
 	TVectorD Unfold(TMatrixD *E=NULL);
+	TH1D* getHisto(TVectorD &v, TMatrixD &e){}; //TODO
 	void SetOverFlow(){useOverFlow=1;};
 	void UnsetOverFlow(){useOverFlow=0;};
 	int FillVectors();
@@ -40,12 +41,16 @@ private:
 	TVectorD getVector(TH1 *h);
 	TMatrixD getMatrix(TH2 *h);
 	TMatrixD getCovMatrix(TH1 *h);
+	TVectorD integrateRow(TMatrixD &a);
+	TVectorD integrateCol(TMatrixD &a);
 
 	vector<TVectorD> v_h;
 	vector<TVectorD> v_g;
 	vector<TVectorD> v_r;
 	vector<TMatrixD> v_m;
 	vector<TMatrixD> v_s; //covariance matrix
+
+	int regIndex;
 
 };
 

@@ -1,4 +1,5 @@
 #include "interface/MergeAndUnfold.h"
+#include <assert.h>
 
 
 
@@ -28,7 +29,7 @@ y.ResizeTo( nCat*v_r[0].GetNrows() );
 //fill K S y
 
 for(int iCat=0;iCat<nCat;iCat++){
-	//K
+	//K 
 	for(int gBin=0;gBin<v_g[0].GetNrows();gBin++)
 	for(int rBin=0;rBin<v_r[0].GetNrows();rBin++)
 		{
@@ -40,7 +41,7 @@ for(int iCat=0;iCat<nCat;iCat++){
 		{
 		S(rBin + v_r[0].GetNrows() * iCat,rBin2+ v_r[0].GetNrows() * iCat) = v_s[iCat](rBin,rBin2);
 		}
-	//y
+	//y 
 	for(int rBin=0;rBin<v_r[0].GetNrows();rBin++)
 		{
 		y(rBin + v_r[0].GetNrows() * iCat) = v_h[iCat](rBin);
@@ -125,7 +126,7 @@ int MergeAndUnfold::FillVectors()
 	if ( histos.size() != matrix.size() ) return 1;	
 	if ( histos.size() != reco.size() ) return 1;	
 	v_h.resize(histos.size());
-	v_g.resize(histos.size());  //for semplicity
+	v_g.resize(histos.size());  //for semplicity - same syntax
 	v_r.resize(histos.size());
 	v_m.resize(histos.size());
 	v_s.resize(histos.size());
@@ -138,14 +139,128 @@ int MergeAndUnfold::FillVectors()
 		v_m[i]=getMatrix( &matrix[i] );
 		v_s[i]=getCovMatrix( &histos[i] );
 	}
+
+	//get efficiency and multiply matrix TODO, check this part
+	for(size_t iCat=0;iCat<histos.size();iCat++)
+	{
+		if(iCat==regIndex) continue;
+		TVectorD p_g=integrateCol(v_m[iCat]);
+		TVectorD p_r=integrateRow(v_m[iCat]);
+		assert(p_g.GetNrows() == v_g[iCat].GetNrows() );
+		//get efficiencies
+		for(int i=0;i<p_g.GetNrows();i++)
+			{
+			p_g(i)=p_g(i)/v_g[0](i);
+			}
+		//p_g now has the efficiencies
+		for(int iBin=0;iBin<v_m[iCat].GetNrows();iBin++)
+		for(int jBin=0;jBin<v_m[iCat].GetNcols();jBin++)
+		{
+			v_m[iCat](iBin,jBin) *= p_g(jBin);
+		}
+		//subtract bkg
+		for(int i=0;i<p_r.GetNrows();i++)
+			{
+			p_r(i)=p_r(i)/v_r[iCat](i);
+			}
+		for(int iBin=0;iBin< v_s[iCat].GetNrows();iBin++)
+		for(int jBin=0;jBin< v_s[iCat].GetNcols();jBin++)
+			{
+			v_s[iCat](iBin,jBin) *= p_r(iBin)*p_r(jBin);
+			if(jBin==iBin)v_h[iCat](iBin) *= p_r(iBin);
+			}
+
+	}
+		
+	//divide reco for expectation. No.
+	//
 	return 0;	
 }
 
-void MergeAndUnfold::AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp)
+int MergeAndUnfold::AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp)
 {
 	histos.push_back( *(TH1D*)(h->Clone(Form("histo_cat%d",int(histos.size())))) );
 	if (gen.size()==0)gen.push_back( *(TH1D*)(g->Clone(Form("gen_cat%d", int(gen.size())))) );
 	reco.push_back( *(TH1D*)(r->Clone(Form("reco_cat%d",int(reco.size())))) );
 	matrix.push_back( *(TH2D*)(resp->Clone(Form("matrix_cat%d",int(matrix.size())))) );
-	return;
+	return int(histos.size())-1;
+}
+
+
+void MergeAndUnfold::Reset()
+{
+	histos.clear();
+	matrix.clear();
+	gen.clear();
+	reco.clear();
+	useOverFlow=0;
+	return ;
+}
+
+int MergeAndUnfold::AddReg(double delta){
+	if (histos.size()==0) return 1;
+	if (regIndex >= 0 ) return 2;  //already exists a regularization factor
+
+	TH1D * h=(TH1D*)histos[0].Clone("reg");
+	TH2D * m=(TH2D*)matrix[0].Clone("reg2");
+	for(int iBin=0;iBin<=m->GetNbinsX()+1;iBin++)
+	for(int jBin=0;jBin<=m->GetNbinsY()+1;jBin++)
+		{
+		if( iBin == jBin ) m->SetBinContent(iBin,jBin,-2);
+		else if( abs(iBin-jBin) == 1 ) m->SetBinContent(iBin,jBin,1);
+		else m->SetBinContent(iBin,jBin,0);
+		m->SetBinError(iBin,jBin,0);
+		}
+	if( useOverFlow )
+	{
+		m->SetBinContent(0,0,-1);
+		m->SetBinContent(m->GetNbinsX()+1,m->GetNbinsY()+1,-1);
+	}
+	else
+	{
+		m->SetBinContent(0,0,1);
+		m->SetBinContent(0,1,0);
+		m->SetBinContent(1,0,0);
+		m->SetBinContent(1,1,-1);
+		m->SetBinContent(m->GetNbinsX()+1,m->GetNbinsY()+1,1);
+		m->SetBinContent(m->GetNbinsX()+1,m->GetNbinsY(),0);
+		m->SetBinContent(m->GetNbinsX(),m->GetNbinsY()+1,0);
+		m->SetBinContent(m->GetNbinsX(),m->GetNbinsY(),-1);
+	}
+	for(int iBin=0;iBin<=h->GetNbinsX()+1;iBin++)
+	{
+		h->SetBinContent(iBin,0);
+		h->SetBinError(iBin,1);
+	}
+
+	m->Scale(TMath::Sqrt(delta));
+
+	regIndex=AddCat(h,m->ProjectionX(),m->ProjectionY(),m);
+	return 0;
+};
+
+
+TVectorD MergeAndUnfold::integrateRow(TMatrixD &a)
+{
+	TVectorD r;
+	r.ResizeTo(a.GetNcols());
+	r.Zero();
+	for (int i=0;i<a.GetNrows();i++)
+	for (int j=0;j<a.GetNcols();j++)
+	{
+		r(j)+=m(i,j);
+	}
+	return r;
+}
+TVectorD MergeAndUnfold::integrateCol(TMatrixD &a);
+{
+	TVectorD r;
+	r.ResizeTo(a.GetNrows());
+	r.Zero();
+	for (int i=0;i<a.GetNrows();i++)
+	for (int j=0;j<a.GetNcols();j++)
+	{
+		r(i)+=m(i,j);
+	}
+	return r;
 }
