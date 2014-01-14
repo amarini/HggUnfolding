@@ -58,6 +58,13 @@ l=B*y;
 TMatrixD Bt(B.GetNcols(),B.GetNrows());Bt.Transpose(B);
 TMatrixD cov=B*S*Bt;  //covariance matrix after linear transformation
 
+//multiply back for v_g
+for(int i=0;i<v_g[0].GetNrows();i++)
+	l(i)*=v_g[0](i);
+for(int iBin=0;iBin<v_g[0].GetNrows();iBin++)
+for(int jBin=0;jBin<v_g[0].GetNrows();jBin++)
+	cov(iBin,jBin)*=v_g[0](iBin)*v_g[0](jBin);
+
 if(E!=NULL)(*E)=cov;
 //get back a histo
 return l;
@@ -147,17 +154,17 @@ int MergeAndUnfold::FillVectors()
 		TVectorD p_g=integrateCol(v_m[iCat]);
 		TVectorD p_r=integrateRow(v_m[iCat]);
 		assert(p_g.GetNrows() == v_g[iCat].GetNrows() );
-		//get efficiencies
-		for(int i=0;i<p_g.GetNrows();i++)
-			{
-			p_g(i)=p_g(i)/v_g[0](i);
-			}
-		//p_g now has the efficiencies
-		for(int iBin=0;iBin<v_m[iCat].GetNrows();iBin++)
-		for(int jBin=0;jBin<v_m[iCat].GetNcols();jBin++)
-		{
-			v_m[iCat](iBin,jBin) *= p_g(jBin);
-		}
+	//	//get efficiencies  -- not necessary see SVD pg9 eq (31). One gets wi out of this procedure
+	//	for(int i=0;i<p_g.GetNrows();i++)
+	//		{
+	//		p_g(i)=p_g(i)/v_g[0](i);
+	//		}
+	//	//p_g now has the efficiencies
+	//	for(int iBin=0;iBin<v_m[iCat].GetNrows();iBin++)
+	//	for(int jBin=0;jBin<v_m[iCat].GetNcols();jBin++)
+	//	{
+	//		v_m[iCat](iBin,jBin) *= p_g(jBin); //is it needed or not?
+	//	}
 		//subtract bkg
 		for(int i=0;i<p_r.GetNrows();i++)
 			{
@@ -166,13 +173,13 @@ int MergeAndUnfold::FillVectors()
 		for(int iBin=0;iBin< v_s[iCat].GetNrows();iBin++)
 		for(int jBin=0;jBin< v_s[iCat].GetNcols();jBin++)
 			{
-			v_s[iCat](iBin,jBin) *= p_r(iBin)*p_r(jBin);
+			//v_s[iCat](iBin,jBin) *= p_r(iBin)*p_r(jBin); // actually error should not increase because it is a difference.
 			if(jBin==iBin)v_h[iCat](iBin) *= p_r(iBin);
 			}
 
 	}
 		
-	//divide reco for expectation. No.
+	// Remember to multiply back by v_g[] after unfolding.
 	//
 	return 0;	
 }
@@ -248,11 +255,11 @@ TVectorD MergeAndUnfold::integrateRow(TMatrixD &a)
 	for (int i=0;i<a.GetNrows();i++)
 	for (int j=0;j<a.GetNcols();j++)
 	{
-		r(j)+=m(i,j);
+		r(j)+=a(i,j);
 	}
 	return r;
 }
-TVectorD MergeAndUnfold::integrateCol(TMatrixD &a);
+TVectorD MergeAndUnfold::integrateCol(TMatrixD &a)
 {
 	TVectorD r;
 	r.ResizeTo(a.GetNrows());
@@ -260,7 +267,7 @@ TVectorD MergeAndUnfold::integrateCol(TMatrixD &a);
 	for (int i=0;i<a.GetNrows();i++)
 	for (int j=0;j<a.GetNcols();j++)
 	{
-		r(i)+=m(i,j);
+		r(i)+=a(i,j);
 	}
 	return r;
 }
