@@ -271,3 +271,59 @@ TVectorD MergeAndUnfold::integrateCol(TMatrixD &a)
 	}
 	return r;
 }
+
+
+TH1D* MergeAndUnfold::UnfoldMinimum(){
+	TMatrixD e;
+	TVectorD v=Unfold(&e);
+	return getHisto(v,e);
+} 
+TH1D* MergeAndUnfold::getHisto(TVectorD &v, TMatrixD &e){
+	TH1D *h=(TH1D*)gen[0].Clone("Gen");
+	int start=1;
+	int end=h->GetNbinsX();
+	int i=0;
+	if(useOverFlow)start--;
+	if(useOverFlow)end++;
+	for(int iBin=start;iBin<=end;iBin++,i++)
+		{
+			h->SetBinContent(iBin, v(i) );
+			h->SetBinError(iBin, TMath::Sqrt(e(i,i)) );
+		}
+}
+
+
+#include "RooUnfold/RooUnfoldSvd.h"
+#include "RooUnfold/RooUnfoldResponse.h"
+TH1D* MergeAndUnfold::UnfoldSvd(int kreg){
+	vector<TH1D> u;
+	for (int iCat=0;iCat<histos.size();iCat++)
+		{
+		RooUnfoldResponse R( &reco[iCat], &gen[0], &matrix[iCat], Form("Resp_%d",iCat), "resp");
+		RooUnfoldSvd U(&R,&histos[iCat],kreg,1000);
+		U.SetNToys(1000);
+		u.push_back(  *((TH1D*)U.Hreco(RooUnfold::kCovToy)->Clone(Form("Svd_%d",iCat)))  );
+		}
+	TH1D *r=(TH1D*)u[0].Clone("Svd");
+	for(int iBin=0;iBin<r->GetNbinsX();iBin++)
+	{
+		r->SetBinContent(iBin,0);
+		r->SetBinError(iBin,0);
+	}
+	//sums
+	for (int iCat=0;iCat<histos.size();iCat++)
+		for(int iBin=0;iBin<r->GetNbinsX();iBin++)
+		{
+			r->SetBinContent(iBin, r->GetBinContent(iBin) + u[iCat].GetBinContent(iBin)/pow(u[iCat].GetBinError(iBin),2) );
+			r->SetBinError(iBin, r->GetBinError(iBin) + 1.0/pow(u[iCat].GetBinError(iBin),2) );
+
+		}
+	//
+	for(int iBin=0;iBin<r->GetNbinsX();iBin++)
+		{
+		r->SetBinContent(iBin, r->GetBinContent(iBin)*r->GetBinError(iBin) );
+		r->SetBinError(iBin,1./sqrt(r->GetBinError(iBin)));
+		}
+
+	return r;
+}
