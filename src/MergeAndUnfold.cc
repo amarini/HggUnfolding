@@ -293,18 +293,54 @@ TH1D* MergeAndUnfold::getHisto(TVectorD &v, TMatrixD &e){
 }
 
 
+// ------------------------ MACROS THAT USES ROOUNFOLD ------------------
 #include "RooUnfold/RooUnfoldSvd.h"
+#include "RooUnfold/RooUnfoldBayes.h"
 #include "RooUnfold/RooUnfoldResponse.h"
-TH1D* MergeAndUnfold::UnfoldSvd(int kreg){
+TH1D* MergeAndUnfold::UnfoldSvd(vector<int> v_kreg){
 	vector<TH1D> u;
+	assert( v_kreg.size()==histos.size());
 	for (int iCat=0;iCat<histos.size();iCat++)
 		{
 		RooUnfoldResponse R( &reco[iCat], &gen[0], &matrix[iCat], Form("Resp_%d",iCat), "resp");
-		RooUnfoldSvd U(&R,&histos[iCat],kreg,1000);
+		RooUnfoldSvd U(&R,&histos[iCat],v_kreg[iCat],1000);
 		U.SetNToys(1000);
 		u.push_back(  *((TH1D*)U.Hreco(RooUnfold::kCovToy)->Clone(Form("Svd_%d",iCat)))  );
 		}
 	TH1D *r=(TH1D*)u[0].Clone("Svd");
+	for(int iBin=0;iBin<r->GetNbinsX();iBin++)
+	{
+		r->SetBinContent(iBin,0);
+		r->SetBinError(iBin,0);
+	}
+	//sums
+	for (int iCat=0;iCat<histos.size();iCat++)
+		for(int iBin=0;iBin<r->GetNbinsX();iBin++)
+		{
+			r->SetBinContent(iBin, r->GetBinContent(iBin) + u[iCat].GetBinContent(iBin)/pow(u[iCat].GetBinError(iBin),2) );
+			r->SetBinError(iBin, r->GetBinError(iBin) + 1.0/pow(u[iCat].GetBinError(iBin),2) );
+
+		}
+	//
+	for(int iBin=0;iBin<r->GetNbinsX();iBin++)
+		{
+		r->SetBinContent(iBin, r->GetBinContent(iBin)*r->GetBinError(iBin) );
+		r->SetBinError(iBin,1./sqrt(r->GetBinError(iBin)));
+		}
+
+	return r;
+}
+
+TH1D* MergeAndUnfold::UnfoldBayes(int niter){
+	vector<TH1D> u;
+	for (int iCat=0;iCat<histos.size();iCat++)
+		{
+		RooUnfoldResponse R( &reco[iCat], &gen[0], &matrix[iCat], Form("Resp_%d",iCat), "resp");
+		RooUnfoldBayes U(&R,&histos[iCat],niter,false);
+		U.SetNToys(1000);
+		u.push_back(  *((TH1D*)U.Hreco(RooUnfold::kCovToy)->Clone(Form("Bayes_%d",iCat)))  );
+		}
+	TH1D *r=(TH1D*)u[0].Clone("Bayes");
 	for(int iBin=0;iBin<r->GetNbinsX();iBin++)
 	{
 		r->SetBinContent(iBin,0);

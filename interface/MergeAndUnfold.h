@@ -27,8 +27,8 @@ public:
 	TVectorD Unfold(TMatrixD *E=NULL);
 	TH1D* UnfoldMinimum(); 
 	TH1D* getHisto(TVectorD &v, TMatrixD &e); 
-	TH1D* UnfoldSvd(int kreg=1);//TODO - use RooUnfold and merge
-	TH1D* UnfoldBayes(int niter=3){};//TODO - use RooUnfold and merge
+	TH1D* UnfoldSvd(vector<int> v_kreg);	
+	TH1D* UnfoldBayes(int niter=3);// use RooUnfold and merge
 	void SetOverFlow(){useOverFlow=1;};
 	void UnsetOverFlow(){useOverFlow=0;};
 	int FillVectors();
