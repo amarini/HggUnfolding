@@ -14,7 +14,7 @@ SOFLAGS       = -fPIC -shared
 LD            = g++
 CXX           = g++
 ROOFIT_BASE=$(ROOFITSYS)
-LDFLAGS+=-L$(ROOFIT_BASE)/lib $(ROOTLIBS) -lRooFitCore -lRooFit -lz
+LDFLAGS+=-L$(ROOFIT_BASE)/lib $(ROOTLIBS) -lRooFitCore -lRooFit -lz -lRooUnfold
 LDFLAGS+= -lTMVA
 CXXFLAGS+=-I$(ROOFIT_BASE)/include
 CXXFLAGS+= `root-config --cflags`
@@ -27,21 +27,24 @@ SHELL=bash
 
 BASEDIR = $(shell pwd)
 
-$(shell mkdir -p bin)
 
 BINDIR = $(BASEDIR)/bin
 SRCDIR = $(BASEDIR)/src
 HEADDIR = $(BASEDIR)/interface
 
+$(shell mkdir -p $(BINDIR) )
+
 #Packages=GlobalContainer Unfolding
 ## Sort needed for building libraries: LAST <- FIRST
 Packages=Unfolding GlobalContainer MergeAndUnfold
-#ObjFiles=$(foreach Pack, $(Packgaes),   $(BINDIR)/$(Pack).$(ObjSuf) )
 ObjFiles=$(patsubst %, $(BINDIR)/%.$(ObjSuf),$(Packages) )
 DictObjFiles=$(patsubst %, $(BINDIR)/%Dict.$(ObjSuf),$(Packages) )
 DictSrcFiles=$(patsubst %, $(BINDIR)/%Dict.$(SrcSuf),$(Packages) )
 DictHeadFiles=$(patsubst %, $(BINDIR)/%Dict.$(HeadSuf),$(Packages) )
 DictLinkDefFiles=$(patsubst %, $(BINDIR)/%LinkDef.$(HeadSuf),$(Packages) )
+
+#make intermediate files persistent
+.PRECIOUS: %.$(SrcSuf) %.$(HeadSuf) %.$(ObjSuf) $(BINDIR)/%Dict.$(SrcSuf) $(BINDIR)/%LinkDef.$(HeadSuf) 
 
 .PHONY: all
 all: info libUnfolding.so
@@ -53,6 +56,7 @@ info:
 	@echo Obj: $(ObjFiles)
 	@echo Dict: $(DictObjFiles)
 	@echo "------------"
+
 
 #InfoLine = \033[01\;31m compiling $(1) \033[00m
 InfoLine = compiling $(1) 
@@ -77,18 +81,14 @@ $(BINDIR)/%.$(ObjSuf): $(BINDIR)/%.$(SrcSuf) $(BINDIR)/%.$(HeadSuf)
 $(BINDIR)/%.$(DepSuf): $(SRCDIR)/%.$(SrcSuf) $(HEADDIR)/%.$(HeadSuf)
 	@echo $(call InfoLine , $@ )
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -M -o $@ $(SRCDIR)/$*.$(SrcSuf)
+
 #LinkDef.h
 $(BINDIR)/%LinkDef.$(HeadSuf): $(HEADDIR)/%.$(HeadSuf)
 	@echo $(call InfoLine , $@ )
-	#$(file >$(BINDIR)/$*LinkDef.$(HeadSuf) , "\#ifdef __CINT__" )
-	#$(file >>$(BINDIR)/$*LinkDef.$(HeadSuf) , "\#pragma link C++ defined_in \"$(BINDIR)/$*.$(HeadSuf)\" ;" )  
-	#$(file >>$(BINDIR)/$*LinkDef.$(HeadSuf) , "\#endif" )
-	echo "#ifdef __CINT__" > $(BINDIR)/$*LinkDef.$(HeadSuf)  
-	echo "#pragma link C++ defined_in \"$(BINDIR)/$*.$(HeadSuf)\" ;" >> $(BINDIR)/$*LinkDef.$(HeadSuf)  
-	echo "#endif" >> $(BINDIR)/$*LinkDef.$(HeadSuf)  
-	#$(file > $(BINDIR)/$*LinkDef.$(HeadSuf), $(shell echo "#ifdef __CINT__" > $(BINDIR)/$*LinkDef.$(HeadSuf)  ))
-	#$(file >> $(BINDIR)/$*LinkDef.$(HeadSuf), $(shell echo "#pragma link C++ defined_in \"$(BINDIR)/$*.$(HeadSuf)\" ;" >> $(BINDIR)/$*LinkDef.$(HeadSuf)  ))
-	#$(file >> $(BINDIR)/$*LinkDef.$(HeadSuf), $(shell echo "#endif" >> $(BINDIR)/$*LinkDef.$(HeadSuf)  ))
+	$(shell echo "#ifdef __CINT__" > $(BINDIR)/$*LinkDef.$(HeadSuf)  )
+	$(shell echo "#pragma link C++ defined_in \"$(BINDIR)/$*.$(HeadSuf)\" ;" >> $(BINDIR)/$*LinkDef.$(HeadSuf)  )
+	$(shell echo "#endif" >> $(BINDIR)/$*LinkDef.$(HeadSuf)   )
+	touch  $(BINDIR)/$*LinkDef.$(HeadSuf)
 
 #Dict
 $(BINDIR)/%Dict.$(SrcSuf): $(HEADDIR)/%.$(HeadSuf) $(BINDIR)/%LinkDef.$(HeadSuf)
