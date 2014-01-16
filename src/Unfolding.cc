@@ -7,9 +7,28 @@
 
 
 
-
 // --- use std as namespace
 using namespace std;
+
+// --- Constructor 
+Unfolding::Unfolding(){
+	gen=NULL;
+	reco=NULL;
+	resp=NULL;
+	tGen=NULL;
+	tReco=NULL;
+	debug=0;
+	catMap.clear();
+};
+// --- Destructor 
+Unfolding::~Unfolding(){
+	if ( gen != NULL ) { gen->Delete(); gen=NULL;}
+	if ( reco != NULL ) { reco->Delete(); reco=NULL;}
+	if ( resp != NULL ) { resp->Delete(); resp=NULL;}
+	if ( tGen != NULL ) { tGen->Delete(); tGen=NULL;}
+	if ( tReco != NULL ) { tReco->Delete(); tReco=NULL;}
+};
+
 
 int Unfolding::InitGen(){
 	if (tGen !=NULL ) delete tGen;

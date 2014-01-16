@@ -11,6 +11,7 @@
 #include "TVectorD.h"
 #include "TDecompSVD.h"
 #include "TMath.h"
+#include "TObject.h"
 
 #include <string>
 #include <vector>
@@ -18,7 +19,7 @@
 using namespace std;
 
 
-class MergeAndUnfold{
+class MergeAndUnfold:public TObject{
 public:
 	MergeAndUnfold(){useOverFlow=0;regIndex=-1;}
 	int AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp); //return catNum on success
@@ -54,7 +55,8 @@ private:
 	vector<TMatrixD> v_s; //covariance matrix
 
 	int regIndex;
-
+public:
+	ClassDef(MergeAndUnfold,1);
 };
 
 #endif

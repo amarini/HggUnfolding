@@ -22,10 +22,11 @@
 
 #include "interface/GlobalContainer.h"
 //#include "src/GlobalContainer.cc" // for the moment
+#include "TObject.h"
 
 using namespace std;
 
-class RecoInfo{ 
+class RecoInfo: public TObject{ 
 public:
 	//costructor
 	RecoInfo(){cat=-1;hgg.SetPxPyPzE(0,0,0,0);weight=0;}
@@ -34,11 +35,12 @@ public:
 	TLorentzVector hgg,pho1,pho2;
 	int cat;
 	float weight;
+	ClassDef(RecoInfo,1);
 };
 
 
 //-------- 
-class Unfolding{
+class Unfolding:public TObject{
 public:
 	Unfolding();
 	~Unfolding();
@@ -63,31 +65,12 @@ private:
 	TH2D *resp;
 	int debug;
 	GlobalContainer Container;
-	map<unsigned long long int, RecoInfo> recoEvents; // map between EventNum ->  reco info
+	map<unsigned long long, RecoInfo> recoEvents; // map between EventNum ->  reco info
 	vector<int> catMap;
 	map<string,float> xSecWeight; 
+public:
+	ClassDef(Unfolding,1);
 };
-#endif
-#ifndef Unfolding_cxx
-// --- Constructor 
-Unfolding::Unfolding(){
-	gen=NULL;
-	reco=NULL;
-	resp=NULL;
-	tGen=NULL;
-	tReco=NULL;
-	debug=0;
-	catMap.clear();
-};
-// --- Destructor 
-Unfolding::~Unfolding(){
-	if ( gen != NULL ) { gen->Delete(); gen=NULL;}
-	if ( reco != NULL ) { reco->Delete(); reco=NULL;}
-	if ( resp != NULL ) { resp->Delete(); resp=NULL;}
-	if ( tGen != NULL ) { tGen->Delete(); tGen=NULL;}
-	if ( tReco != NULL ) { tReco->Delete(); tReco=NULL;}
-};
-
 #endif
 
 // -----------------END OF H FILE

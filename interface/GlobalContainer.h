@@ -7,11 +7,12 @@
 #include "TLorentzVector.h"
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TObject.h"
 
 using namespace std;
 
 
-class GlobalContainer{
+class GlobalContainer:public TObject{
 public:
 	GlobalContainer(){};
 	~GlobalContainer();
@@ -39,7 +40,10 @@ private:
 	map<string, long * > 	v_long_container;
 	map<string, double * > 	v_double_container;
 	map<string, TLorentzVector* > v_p4_container;
-
+public:
+	ClassDef(GlobalContainer,1);
+	
+	
 };
 
 // ----------------------------- TEMPLATE CODE --------------------------

@@ -41,10 +41,10 @@ ObjFiles=$(patsubst %, $(BINDIR)/%.$(ObjSuf),$(Packages) )
 DictObjFiles=$(patsubst %, $(BINDIR)/%Dict.$(ObjSuf),$(Packages) )
 DictSrcFiles=$(patsubst %, $(BINDIR)/%Dict.$(SrcSuf),$(Packages) )
 DictHeadFiles=$(patsubst %, $(BINDIR)/%Dict.$(HeadSuf),$(Packages) )
-DictLinkDefFiles=$(patsubst %, $(BINDIR)/%LinkDef.$(HeadSuf),$(Packages) )
+DictLinkDefFiles=$(patsubst %, $(HEADDIR)/%LinkDef.$(HeadSuf),$(Packages) )
 
 #make intermediate files persistent
-.PRECIOUS: %.$(SrcSuf) %.$(HeadSuf) %.$(ObjSuf) $(BINDIR)/%Dict.$(SrcSuf) $(BINDIR)/%LinkDef.$(HeadSuf) 
+.PRECIOUS: %.$(SrcSuf) %.$(HeadSuf) %.$(ObjSuf) $(BINDIR)/%Dict.$(SrcSuf)
 
 .PHONY: all
 all: info libUnfolding.so
@@ -76,24 +76,24 @@ $(BINDIR)/%.$(ObjSuf): $(SRCDIR)/%.$(SrcSuf) $(HEADDIR)/%.$(HeadSuf)
 
 $(BINDIR)/%.$(ObjSuf): $(BINDIR)/%.$(SrcSuf) $(BINDIR)/%.$(HeadSuf)
 	@echo $(call InfoLine , $@ )
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ -I$(BINDIR) $(BINDIR)/$*.$(SrcSuf)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ -I$(BINDIR)/ $(BINDIR)/$*.$(SrcSuf)
 #.d
 $(BINDIR)/%.$(DepSuf): $(SRCDIR)/%.$(SrcSuf) $(HEADDIR)/%.$(HeadSuf)
 	@echo $(call InfoLine , $@ )
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -M -o $@ $(SRCDIR)/$*.$(SrcSuf)
 
-#LinkDef.h
+#LinkDef.h -- unused
 $(BINDIR)/%LinkDef.$(HeadSuf): $(HEADDIR)/%.$(HeadSuf)
 	@echo $(call InfoLine , $@ )
 	$(shell echo "#ifdef __CINT__" > $(BINDIR)/$*LinkDef.$(HeadSuf)  )
-	$(shell echo "#pragma link C++ defined_in \"$(BINDIR)/$*.$(HeadSuf)\" ;" >> $(BINDIR)/$*LinkDef.$(HeadSuf)  )
+	$(shell echo "#pragma link C++ class $*+ ;" >> $(BINDIR)/$*LinkDef.$(HeadSuf)  )
 	$(shell echo "#endif" >> $(BINDIR)/$*LinkDef.$(HeadSuf)   )
 	touch  $(BINDIR)/$*LinkDef.$(HeadSuf)
 
 #Dict
-$(BINDIR)/%Dict.$(SrcSuf): $(HEADDIR)/%.$(HeadSuf) $(BINDIR)/%LinkDef.$(HeadSuf)
+$(BINDIR)/%Dict.$(SrcSuf): $(HEADDIR)/%.$(HeadSuf) $(HEADDIR)/%LinkDef.$(HeadSuf)
 	@echo $(call InfoLine , $@ )
-	rootcint -v4 -f $(BINDIR)/$*Dict.cc -c -I$(ROOFIT_BASE)/include -I$(CMSSW_BASE)/src  -I$(CMSSW_RELEASE_BASE)/src $(HEADDIR)/$*.$(HeadSuf) $(BINDIR)/$*LinkDef.$(HeadSuf)
+	rootcint -v4 -f $(BINDIR)/$*Dict.cc -c -I$(ROOFIT_BASE)/include -I$(CMSSW_BASE)/src  -I$(CMSSW_RELEASE_BASE)/src $(HEADDIR)/$*.$(HeadSuf) $(HEADDIR)/$*LinkDef.$(HeadSuf)
 
 .PHONY: clean
 clean:
@@ -101,9 +101,7 @@ clean:
 	-rm $(DictObjFiles)
 	-rm $(DictSrcFiles)
 	-rm $(DictHeadFiles)
-	-rm $(DictLinkDefFiles)
 	-rm  libUnfolding.so 
-	#-rm  $(wildcard $(BINDIR)/* )
 
 ### END ####
 
