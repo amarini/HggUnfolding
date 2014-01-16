@@ -34,6 +34,8 @@ public:
 	void UnsetOverFlow(){useOverFlow=0;};
 	int FillVectors();
 
+	vector<TH1D> u;
+
 private:	
 	vector<TH1D> histos;
 

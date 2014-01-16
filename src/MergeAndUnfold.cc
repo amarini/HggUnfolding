@@ -298,7 +298,8 @@ TH1D* MergeAndUnfold::getHisto(TVectorD &v, TMatrixD &e){
 #include "RooUnfold/RooUnfoldBayes.h"
 #include "RooUnfold/RooUnfoldResponse.h"
 TH1D* MergeAndUnfold::UnfoldSvd(vector<int> v_kreg){
-	vector<TH1D> u;
+	//vector<TH1D> u;
+	u.clear();
 	assert( v_kreg.size()==histos.size());
 	for (int iCat=0;iCat<histos.size();iCat++)
 		{
@@ -324,7 +325,7 @@ TH1D* MergeAndUnfold::UnfoldSvd(vector<int> v_kreg){
 	//
 	for(int iBin=0;iBin<r->GetNbinsX();iBin++)
 		{
-		r->SetBinContent(iBin, r->GetBinContent(iBin)*r->GetBinError(iBin) );
+		r->SetBinContent(iBin, r->GetBinContent(iBin)/r->GetBinError(iBin) );
 		r->SetBinError(iBin,1./sqrt(r->GetBinError(iBin)));
 		}
 
@@ -332,7 +333,8 @@ TH1D* MergeAndUnfold::UnfoldSvd(vector<int> v_kreg){
 }
 
 TH1D* MergeAndUnfold::UnfoldBayes(int niter){
-	vector<TH1D> u;
+//vector<TH1D> u;
+	u.clear();
 	for (int iCat=0;iCat<histos.size();iCat++)
 		{
 		RooUnfoldResponse R( &reco[iCat], &gen[0], &matrix[iCat], Form("Resp_%d",iCat), "resp");
@@ -357,7 +359,7 @@ TH1D* MergeAndUnfold::UnfoldBayes(int niter){
 	//
 	for(int iBin=0;iBin<r->GetNbinsX();iBin++)
 		{
-		r->SetBinContent(iBin, r->GetBinContent(iBin)*r->GetBinError(iBin) );
+		r->SetBinContent(iBin, r->GetBinContent(iBin)/r->GetBinError(iBin) );
 		r->SetBinError(iBin,1./sqrt(r->GetBinError(iBin)));
 		}
 

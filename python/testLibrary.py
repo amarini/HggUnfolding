@@ -161,6 +161,12 @@ h_sig_truth.Draw("HIST")
 #uMinReg.Draw("P SAME")
 uBayes.Draw("P SAME")
 
+for iCat in reversed(range(0,nCat)):
+	Sig[iCat].Draw("HIST SAME")
+	Unfolder.u[iCat].SetLineColor(ROOT.kGray+iCat)
+	Unfolder.u[iCat].SetMarkerColor(ROOT.kGray+iCat)
+	Unfolder.u[iCat].Draw("P SAME")
+
 L=ROOT.TLegend(0.75,.75,.89,.89)
 L.AddEntry(h_sig_truth,"Truth","L")
 #L.AddEntry(uMin,"Min","P");
