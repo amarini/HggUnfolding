@@ -4,6 +4,9 @@ ObjSuf        = o
 DepSuf        = d
 DllSuf        = so
 
+.PHONY: all
+all: info libUnfolding.so
+
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf)
 
 ##
@@ -14,6 +17,21 @@ SOFLAGS       = -fPIC -shared
 LD            = g++
 CXX           = g++
 ROOFIT_BASE=$(ROOFITSYS)
+
+a=$(findstring lxplus, $(HOSTNAME) )
+
+.PHONY: lxplusinfo
+ifeq ( $(a), )
+lxplusinfo:
+	@echo You are NOT on lxplus
+else 
+lxplusinfo:
+	@echo You are on lxplus 
+ROOUNFOLD_BASE=/afs/cern.ch/user/a/amarini/work/RooUnfold-1.1.1/
+CXXFLAGS+=-I$(ROOUNFOLD_BASE)/include/ 
+LDFLAGS+=-L$(ROOUNFOLD_BASE)/
+endif
+
 LDFLAGS+=-L$(ROOFIT_BASE)/lib $(ROOTLIBS) -lz -lRooUnfold
 #LDFLAGS+=-lRooFitCore -lRooFit 
 #LDFLAGS+= -lTMVA
@@ -47,12 +65,11 @@ DictLinkDefFiles=$(patsubst %, $(HEADDIR)/%LinkDef.$(HeadSuf),$(Packages) )
 #make intermediate files persistent
 .PRECIOUS: %.$(SrcSuf) %.$(HeadSuf) %.$(ObjSuf) $(BINDIR)/%Dict.$(SrcSuf)
 
-.PHONY: all
-all: info libUnfolding.so
 
-.PHONY: info
-info:
+.PHONY: info,infobegin
+infobegin:
 	@echo "--- INFO ---"
+info: infobegin lxplusinfo
 	@echo Packages: $(Packages)
 	@echo Obj: $(ObjFiles)
 	@echo Dict: $(DictObjFiles)
