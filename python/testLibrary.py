@@ -137,18 +137,23 @@ for iCat in range(0,nCat):
 		h.SetBinError  (iBin, s/math.sqrt(b)) 
 	Unfolder.AddCat(h,h_sig_truth,Sig[iCat],Matrix[iCat]);
 # Fit Sig 
-#uMin=Unfolder.UnfoldMinimum();
+uMin=Unfolder.UnfoldMinimum();
 uBayes=Unfolder.UnfoldBayes(3);
+
 Unfolder.AddReg(0.1)
 #uMinReg=Unfolder.UnfoldMinimum(); 
+
 # Unfold Distributions
 # Show Results
 C1=ROOT.TCanvas("c1","c1",800,800)
-#uMin.SetLineColor(ROOT.kBlue+2)
-#uMin.SetMarkerStyle(ROOT.kSolidCircle)
-#uMin.SetMarkerSize(0.8)
+
+uMin.SetLineColor(ROOT.kBlue+2)
+uMin.SetMarkerColor(ROOT.kBlue+2)
+uMin.SetMarkerStyle(ROOT.kCircle)
+uMin.SetMarkerSize(0.8)
 
 uBayes.SetLineColor(ROOT.kGreen+1) 
+uBayes.SetMarkerColor(ROOT.kGreen+1) 
 uBayes.SetMarkerStyle(ROOT.kOpenCircle)
 uBayes.SetMarkerSize(0.8)
 
@@ -157,9 +162,6 @@ uBayes.SetMarkerSize(0.8)
 #uMinReg.SetMarkerSize(0.8)
 
 h_sig_truth.Draw("HIST")
-#uMin.Draw("P SAME")
-#uMinReg.Draw("P SAME")
-uBayes.Draw("P SAME")
 
 for iCat in reversed(range(0,nCat)):
 	Sig[iCat].Draw("HIST SAME")
@@ -167,10 +169,16 @@ for iCat in reversed(range(0,nCat)):
 	Unfolder.u[iCat].SetMarkerColor(ROOT.kGray+iCat)
 	Unfolder.u[iCat].Draw("P SAME")
 
+uBayes.Draw("P SAME")
+uMin.Draw("P SAME")
+#uMinReg.Draw("P SAME")
+
 L=ROOT.TLegend(0.75,.75,.89,.89)
 L.AddEntry(h_sig_truth,"Truth","L")
-#L.AddEntry(uMin,"Min","P");
+L.AddEntry(uMin,"Min","PF");
 #L.AddEntry(uMinReg,"Reg 0.1","P");
-L.AddEntry(uBayes,"Bayes","P");
+L.AddEntry(uBayes,"Bayes","PF");
 L.Draw("SAME")
+
+print "press Enter to finish"
 a=raw_input()

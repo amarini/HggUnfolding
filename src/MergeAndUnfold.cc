@@ -2,7 +2,6 @@
 #include <assert.h>
 
 
-
 // ---------------------- MACRO THAT DO UNFOLDING --------------
 TVectorD MergeAndUnfold::Unfold(TMatrixD *E){
 
@@ -23,17 +22,29 @@ TVectorD l,y;
  */
 l.ResizeTo(v_g[0].GetNrows());
 int nCat=v_h.size();
-K.ResizeTo( v_g[0].GetNrows() ,nCat * v_r[0].GetNrows() );
-S.ResizeTo( v_r[0].GetNrows() * nCat,  v_r[0].GetNrows() * nCat );
+K.ResizeTo( nCat * v_r[0].GetNrows() , v_g[0].GetNrows() );
+S.ResizeTo( v_r[0].GetNrows() * nCat , v_r[0].GetNrows() * nCat );
 y.ResizeTo( nCat*v_r[0].GetNrows() );
 //fill K S y
+//
+//asserts
+int nBinGen=v_g[0].GetNrows();
+int nBinRecoPerCat = v_r[0].GetNrows();
+assert( v_r.size() == nCat );
+assert( v_m.size() == nCat );
+for(int iCat=0;iCat<nCat;iCat++)
+{
+	assert( v_r[iCat].GetNrows() == nBinRecoPerCat );
+	assert( v_m[iCat].GetNrows() == nBinRecoPerCat );
+	assert( v_m[iCat].GetNcols() == nBinGen  );
+}
 
 for(int iCat=0;iCat<nCat;iCat++){
 	//K 
 	for(int gBin=0;gBin<v_g[0].GetNrows();gBin++)
 	for(int rBin=0;rBin<v_r[0].GetNrows();rBin++)
 		{
-		K(gBin,rBin + v_r[0].GetNrows() * iCat) = v_m[iCat](gBin,rBin);
+		K(rBin + v_r[0].GetNrows() * iCat,gBin) = v_m[iCat](rBin,gBin);
 		}
 	//S
 	for(int rBin=0;rBin<v_r[0].GetNrows();rBin++)
@@ -48,24 +59,47 @@ for(int iCat=0;iCat<nCat;iCat++){
 		}
 } //loop over categories
 
+//second round of assertion
+int nBinReco=y.GetNrows();
+assert( nBinReco == nBinRecoPerCat * nCat );
+assert( K.GetNcols() == nBinGen );
+assert( K.GetNrows() == nBinReco);
+assert( S.GetNrows() == nBinReco);
+assert( S.GetNcols() == nBinReco);
+
 //is defined * and + .Invert();
 TMatrixD Kt(K.GetNcols(),K.GetNrows()); Kt.Transpose(K);
-TMatrixD A=Kt*S*K; A.Invert();
+TMatrixD A=Kt*S*K; 
+	float epsilon=0;
+	while ( A.Determinant() == 0)
+	{
+		for(int iDiag=0;iDiag<A.GetNrows();iDiag++)
+			A(iDiag,iDiag)+=0.0001;
+		epsilon += 0.0001;
+	}
+	if(epsilon >0 ) printf("used epsilon=%.4f for inversion purpose\n",epsilon);
+	A.Invert();
 //l=A*Kt*S*y;
 TMatrixD B=A*Kt*S;
 l=B*y;
 
 TMatrixD Bt(B.GetNcols(),B.GetNrows());Bt.Transpose(B);
-TMatrixD cov=B*S*Bt;  //covariance matrix after linear transformation
+TMatrixD cov; cov.ResizeTo(l.GetNrows(),l.GetNrows());
+cov = (B*S*Bt);  //covariance matrix after linear transformation
 
 //multiply back for v_g
+assert(l.GetNrows() == v_g[0].GetNrows());
 for(int i=0;i<v_g[0].GetNrows();i++)
 	l(i)*=v_g[0](i);
+
 for(int iBin=0;iBin<v_g[0].GetNrows();iBin++)
 for(int jBin=0;jBin<v_g[0].GetNrows();jBin++)
 	cov(iBin,jBin)*=v_g[0](iBin)*v_g[0](jBin);
 
-if(E!=NULL)(*E)=cov;
+if(E!=NULL){ 
+	E->ResizeTo(cov.GetNrows(),cov.GetNcols());
+	(*E)=cov;
+}
 //get back a histo
 return l;
 };
@@ -79,8 +113,15 @@ TVectorD MergeAndUnfold::getVector(TH1 *h){
 	int i=0;
 	if(useOverFlow) { r(i) = h->GetBinContent(i);i++;}
 	for(int iBin=1;iBin<=h->GetNbinsX();iBin++)
-		{r(i)=h->GetBinContent(iBin);i++;}
-	if(useOverFlow) { r(i) = h->GetBinContent(h->GetNbinsX()+1);i++;}
+		{
+			assert(i<r.GetNrows());
+			r(i)=h->GetBinContent(iBin);i++;
+		}
+	if(useOverFlow) { 
+			assert(i<r.GetNrows());
+			r(i) = h->GetBinContent(h->GetNbinsX()+1);i++;
+
+	}
 	return r;
 }
 
@@ -92,11 +133,11 @@ TMatrixD MergeAndUnfold::getMatrix(TH2 *h){
 	if (useOverFlow)m+=2;
 	r.ResizeTo(n,m);
 	r.Zero(); //make sure is set to 0
-	if(useOverFlow) 
+	if(!useOverFlow) 
 	{
 		for(int iBin=1;iBin<=h->GetNbinsX();iBin++)
 		for(int jBin=1;jBin<=h->GetNbinsY();jBin++)
-			r(iBin,jBin)=h->GetBinContent(iBin,jBin);
+			r(iBin-1,jBin-1)=h->GetBinContent(iBin,jBin);
 	
 	}
 	else{
@@ -109,15 +150,13 @@ TMatrixD MergeAndUnfold::getMatrix(TH2 *h){
 TMatrixD MergeAndUnfold::getCovMatrix(TH1 *h){
 	TMatrixD r;
 	int n=h->GetNbinsX();
-	int m=h->GetNbinsY();
 	if (useOverFlow)n+=2;
-	if (useOverFlow)m+=2;
-	r.ResizeTo(n,m);
+	r.ResizeTo(n,n); 
 	r.Zero(); // make sure is set to 0
-	if(useOverFlow) 
+	if(!useOverFlow) 
 	{
 		for(int iBin=1;iBin<=h->GetNbinsX();iBin++)
-			r(iBin,iBin)=TMath::Power(h->GetBinError(iBin),2);
+			r(iBin-1,iBin-1)=TMath::Power(h->GetBinError(iBin),2);
 	
 	}
 	else{
@@ -138,21 +177,29 @@ int MergeAndUnfold::FillVectors()
 	v_m.resize(histos.size());
 	v_s.resize(histos.size());
 
+	int nBinRecoPerCat=histos[0].GetNbinsX(); if(useOverFlow) nBinRecoPerCat+=2;
+	int nBinGen=gen[0].GetNbinsX();if(useOverFlow) nBinGen+=2;
+
 	for(size_t i=0;i<histos.size();i++)
 	{
-		v_h[i]=getVector( &histos[i] );
-		v_g[i]=getVector( &gen[0] );
-		v_r[i]=getVector( &reco[i] );
-		v_m[i]=getMatrix( &matrix[i] );
-		v_s[i]=getCovMatrix( &histos[i] );
+		v_h[i].ResizeTo(nBinRecoPerCat);
+		   v_h[i]=getVector( &histos[i] );
+		v_g[i].ResizeTo(nBinGen);
+		   v_g[i]=getVector( &gen[0] );
+		v_r[i].ResizeTo(nBinRecoPerCat);
+		   v_r[i]=getVector( &reco[i] );
+		v_m[i].ResizeTo(nBinRecoPerCat,nBinGen);
+		   v_m[i]=getMatrix( &matrix[i] );
+		v_s[i].ResizeTo(nBinRecoPerCat,nBinRecoPerCat);
+		   v_s[i]=getCovMatrix( &histos[i] );
 	}
 
 	//get efficiency and multiply matrix TODO, check this part
 	for(size_t iCat=0;iCat<histos.size();iCat++)
 	{
 		if(iCat==regIndex) continue;
-		TVectorD p_g=integrateCol(v_m[iCat]);
-		TVectorD p_r=integrateRow(v_m[iCat]);
+		TVectorD p_g; p_g.ResizeTo(nBinGen);p_g=integrateRow(v_m[iCat]);
+		TVectorD p_r;p_r.ResizeTo(nBinRecoPerCat);p_r=integrateCol(v_m[iCat]);
 		assert(p_g.GetNrows() == v_g[iCat].GetNrows() );
 	//	//get efficiencies  -- not necessary see SVD pg9 eq (31). One gets wi out of this procedure
 	//	for(int i=0;i<p_g.GetNrows();i++)
@@ -290,6 +337,7 @@ TH1D* MergeAndUnfold::getHisto(TVectorD &v, TMatrixD &e){
 			h->SetBinContent(iBin, v(i) );
 			h->SetBinError(iBin, TMath::Sqrt(e(i,i)) );
 		}
+	return h;
 }
 
 
