@@ -21,7 +21,7 @@ ROOFIT_BASE=$(ROOFITSYS)
 a=$(findstring lxplus, $(HOSTNAME) )
 
 .PHONY: lxplusinfo
-ifeq ( $(a), )
+ifeq ( $(strip $(a)), )
 lxplusinfo:
 	@echo You are NOT on lxplus
 else 
