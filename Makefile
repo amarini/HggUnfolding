@@ -21,12 +21,12 @@ ROOFIT_BASE=$(ROOFITSYS)
 a=$(findstring lxplus, $(HOSTNAME) )
 
 .PHONY: lxplusinfo
-ifeq ( $(a), )
+ifeq ($(strip $(a)), )
 lxplusinfo:
-	@echo You are NOT on lxplus
+	@echo You are NOT on lxplus - $a : $(HOSTNAME)
 else 
 lxplusinfo:
-	@echo You are on lxplus 
+	@echo You are on lxplus - $a : $(HOSTNAME)
 ROOUNFOLD_BASE=/afs/cern.ch/user/a/amarini/work/RooUnfold-1.1.1/
 CXXFLAGS+=-I$(ROOUNFOLD_BASE)/include/ 
 LDFLAGS+=-L$(ROOUNFOLD_BASE)/
