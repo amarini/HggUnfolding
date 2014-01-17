@@ -141,7 +141,7 @@ uMin=Unfolder.UnfoldMinimum();
 uBayes=Unfolder.UnfoldBayes(3);
 
 Unfolder.AddReg(0.1)
-#uMinReg=Unfolder.UnfoldMinimum(); 
+uMinReg=Unfolder.UnfoldMinimum(); 
 
 # Unfold Distributions
 # Show Results
@@ -157,9 +157,10 @@ uBayes.SetMarkerColor(ROOT.kGreen+1)
 uBayes.SetMarkerStyle(ROOT.kOpenCircle)
 uBayes.SetMarkerSize(0.8)
 
-#uMinReg.SetLineColor(ROOT.kCyan+1) 
-#uMinReg.SetMarkerStyle(ROOT.kDiamond)
-#uMinReg.SetMarkerSize(0.8)
+uMinReg.SetLineColor(ROOT.kCyan+1) 
+uMinReg.SetMarkerColor(ROOT.kCyan+1) 
+uMinReg.SetMarkerStyle(ROOT.kStar)
+uMinReg.SetMarkerSize(0.8)
 
 h_sig_truth.Draw("HIST")
 
@@ -171,12 +172,12 @@ for iCat in reversed(range(0,nCat)):
 
 uBayes.Draw("P SAME")
 uMin.Draw("P SAME")
-#uMinReg.Draw("P SAME")
+uMinReg.Draw("P SAME")
 
 L=ROOT.TLegend(0.75,.75,.89,.89)
 L.AddEntry(h_sig_truth,"Truth","L")
 L.AddEntry(uMin,"Min","PF");
-#L.AddEntry(uMinReg,"Reg 0.1","P");
+L.AddEntry(uMinReg,"Reg 0.1","P");
 L.AddEntry(uBayes,"Bayes","PF");
 L.Draw("SAME")
 

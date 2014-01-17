@@ -289,7 +289,7 @@ int MergeAndUnfold::AddReg(double delta){
 
 	m->Scale(TMath::Sqrt(delta));
 
-	regIndex=AddCat(h,m->ProjectionX(),m->ProjectionY(),m);
+	regIndex=AddCat(h,m->ProjectionY(),m->ProjectionX(),m);
 	return 0;
 };
 
