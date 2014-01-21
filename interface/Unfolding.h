@@ -2,6 +2,7 @@
 //------------------H FILE
 #include <string>
 #include <map>
+#include <set>
 #include <vector>
 #include <iostream>
 #include <cstdio>
@@ -52,10 +53,11 @@ public:
 	int InitGen();
 	int InitReco();
 	int InitRecoOptTree(); // not completely implemented
-	int Write();
+	int Write(string output);
 	void SetDebug(int debug_){debug=debug_;};
 	void SetNcat(int ncat){catMap.resize(ncat);for(int i=0;i<ncat;i++)catMap[i]=i;}; //give to each cat a cat
-	void SetCat(int iCat,int jCat){if( (iCat >= catMap.size() )||(jCat >=catMap.size()))return ; catMap[iCat]=jCat; }; //Set Cat iCat to be the "same" as jCat
+	void SetCat(int iCat,int jCat){if( (iCat >= catMap.size() )||(jCat >=catMap.size()))return ; 
+			if(catMap[jCat]==jCat){catMap[iCat]=jCat;return;} else return SetCat(iCat,catMap[jCat]);}; //Set Cat iCat to be the "same" as jCat
 	
 private:
 	TChain *tGen;
@@ -68,6 +70,7 @@ private:
 	map<unsigned long long, RecoInfo> recoEvents; // map between EventNum ->  reco info
 	vector<int> catMap;
 	map<string,float> xSecWeight; 
+	set<string> histoToSave;
 public:
 	ClassDef(Unfolding,1);
 };

@@ -67,9 +67,11 @@ int Unfolding::InitGen(){
 	return 0;
 	};
 int Unfolding::LoopOverGen(){
+	if(debug>0)printf("Loop Over Gen\n");
 	InitGen();
 	for (unsigned long long int iEntry=0;iEntry<tGen->GetEntries();iEntry++)
 		{
+		if(debug>2)printf("Loop Over Gen: %llu\n",iEntry);
 		tGen->GetEntry(iEntry);
 		int pho1=-1,pho2=-1;
 		for(int igp=0;igp< Container.GetEntry<int>("gp_n") ;igp++)
@@ -77,7 +79,7 @@ int Unfolding::LoopOverGen(){
 				if ( Container.GetEntry<int*>("gp_status")[igp] != 1) continue;
 				if ( Container.GetEntry<int*>("gp_pdgid")[igp] != 22 ) continue;
 				int mother= Container.GetEntry<int*>("gp_mother")[igp];
-				if( Container.GetEntry<int*>("gp_pdgid")[mother] !=23 ) continue; //check Higgs PdgID
+				if( Container.GetEntry<int*>("gp_pdgid")[mother] !=25 ) continue; //check Higgs PdgID -- mother cascade ? - mother of mother of mother
 				if (pho1 <0 ) pho1=igp;
 				if (pho1 >=0 && pho1 != igp && pho2 <0 ) pho2=igp;
 
@@ -98,6 +100,7 @@ int Unfolding::LoopOverGen(){
 		// ph. sp. selection on photons 
 		if (isGen){
 	 	   string name="gen_hgg_pt";
+		   histoToSave.insert(name);
 		   if( Container.GetEntryPtr<TH1D>(name) != NULL ) // if it does not exists create it 
 			{
 			TH1D *default_th1d=new TH1D(name.c_str(),name.c_str(),100,0.,100.);
@@ -121,6 +124,7 @@ int Unfolding::LoopOverGen(){
 		//fill maitrix
 			if( isGen){
 			   string name="response_hgg_pt";
+			   histoToSave.insert(name);
 			   name+=Form("_cat%d",iCat);
 			   if( Container.GetEntryPtr<TH2D>(name) != NULL ) // if it does not exists create it 
 				{
@@ -132,6 +136,7 @@ int Unfolding::LoopOverGen(){
 		//fill reco histo
 			string name="reco_hgg_pt";
 			name+=Form("_cat%d",iCat);
+			   histoToSave.insert(name);
 			if( Container.GetEntryPtr<TH1D>(name) != NULL ) // if it does not exists create it 
 				{
 				TH1D *default_th1d=new TH1D(name.c_str(),name.c_str(),100,0.,100.);
@@ -187,19 +192,22 @@ int Unfolding::InitRecoOptTree(){
 };
 
 int Unfolding::InitReco(){
+	if(debug>0)printf("[%d] Init Reco\n",debug);
 
 }
 int Unfolding::LoopOverReco(){
 	InitReco();
+	if(debug>0)printf("[%d] Loop Over Reco\n",debug);
 
 	for (vector<string>::iterator iFile=recoFiles.begin(); iFile!=recoFiles.end();iFile++)
 		{
+		if(debug>1)printf("[%d] Loop Over Reco: File %s\n",debug,iFile->c_str());
 		FILE *fr=fopen(iFile->c_str(),"r");
 		if (fr == NULL) fprintf(stderr,"Error file %s does not exist\n",iFile->c_str());
 		char buf[2048]; //max length of buffer-line
 		while(fgets(buf,2048,fr)!=NULL)
 			{
-			char*line=buf	;
+			if(debug>2)printf(".",iFile->c_str());
 			int n; double value; char branch[2048];
 			//sostituisco i : con ' ' ? 
 			long int run_=-999;
@@ -214,8 +222,14 @@ int Unfolding::LoopOverReco(){
 			int cat_=-999;
 			float weight_=1;
 			float xsweight_=-999;
-			while (sscanf(line,"\t%s:%lf%n",branch,&value,&n) != EOF )
+			int sigtyp_=-999;
+			string buf_s=buf;
+			std::replace(buf_s.begin(),buf_s.end(),':',' ');
+			std::replace(buf_s.begin(),buf_s.end(),'\t',' ');
+			const char*line=buf_s.c_str()	;
+			while (sscanf(line,"%s %lf%n",branch,&value,&n) != EOF )
 				{
+				if(debug>3) printf("branch=%s\n",branch);
 				if( string(branch) == "run") run_=value ;
 				if( string(branch) == "lumi") lumi_=value ;
 				if( string(branch) == "event") event_=value;
@@ -228,6 +242,8 @@ int Unfolding::LoopOverReco(){
 				if( string(branch) == "cat") cat_=value;
 				if( string(branch) == "fullweight") weight_=value; //not in txt yet
 				if( string(branch) == "xsweight") xsweight_=value; //not in txt yet
+				if( string(branch) == "sigtyp") sigtyp_=int(value); //not in txt yet
+				line +=n;
 				}
 			TLorentzVector pho1,pho2,hgg; 
 			float t=TMath::Exp(-pho1_eta_);
@@ -244,11 +260,12 @@ int Unfolding::LoopOverReco(){
 				size_t n=fName.rfind('/');
 				if( n != string::npos)
 				{
-					fName=fName.erase(n);
+					fName=fName.erase(n); //TODO use sigtyp
 					xSecWeight[fName]=xsweight_;
 				}//exists n
 				
 				}
+			if(debug > 3) printf("[%d] Readed values: %ld %ld %lld %.1f %.1f %.1f %.1f %.1f %.1f %d %.1f %.1f %d\n",debug,run_,lumi_,event_,pho1_e_,pho1_eta_,pho1_phi_,pho2_e_,pho2_eta_,pho2_phi_,cat_,weight_,xsweight_,sigtyp_);
 			assert(weight_>0);
 			assert(xsweight_>0);
 
@@ -258,6 +275,15 @@ int Unfolding::LoopOverReco(){
 
 };
 
-int Unfolding::Write(){};
-
-
+int Unfolding::Write(string output){
+	TFile *out=TFile::Open(output.c_str(),"RECREATE");
+	out->cd();
+for (set<string>::iterator hName=histoToSave.begin();hName!=histoToSave.end();hName++)
+	{
+	if( hName->find("resp") !=string::npos)
+	Container.GetEntryPtr<TH2D>( *hName );
+	else
+	Container.GetEntryPtr<TH1D>( *hName );
+	}
+	out->Close();
+};
