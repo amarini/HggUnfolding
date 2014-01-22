@@ -84,7 +84,9 @@ InfoLine = compiling $(1)
 libUnfolding.$(DllSuf): $(ObjFiles) $(DictObjFiles)
 	@echo $(call InfoLine , $@ )
 	$(LD) $(SOFLAGS) $(LDFLAGS) $(ObjFiles) $(DictObjFiles) -o $@
-	@echo "--- DONE ---"
+	@echo "************"
+	@echo "*   DONE   *"
+	@echo "************"
 
 #implicit rules
 

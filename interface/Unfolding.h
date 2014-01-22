@@ -59,6 +59,7 @@ public:
 	void SetCat(int iCat,int jCat){if( (iCat >= catMap.size() )||(jCat >=catMap.size()))return ; 
 			if(catMap[jCat]==jCat){catMap[iCat]=jCat;return;} else return SetCat(iCat,catMap[jCat]);}; //Set Cat iCat to be the "same" as jCat
 	
+	map<string,string> xSecMapDirToNam;
 private:
 	TChain *tGen;
 	TChain *tReco;
