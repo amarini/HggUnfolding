@@ -93,6 +93,11 @@ int Unfolding::LoopOverGen(){
 	Short_t gp_pdgid[MAXN]; tGen->SetBranchAddress("gp_pdgid",gp_pdgid);
 	Short_t gp_mother[MAXN]; tGen->SetBranchAddress("gp_mother",gp_mother);
 	ULong64_t eventNum=0;tGen->SetBranchAddress("event",&eventNum);
+	//JETS
+	Int_t gjets_n;tGen->SetBranchAddress("genjet_algo1_n",&gjets_n);
+	TClonesArray *gjets_p4=0; tGen->SetBranchAddress("genjet_algo1_p4",&gjets_p4);
+	Float_t JetPtCut=25; //TO MAKE CONFIGURABLE
+	Float_t JetPhoDR=0.3;
 
 	if(debug>0) cout<<"[1] Loop Over Gen"<< endl;
 	if(debug>1) cout<<"[2] GenEntries " << tGen->GetEntries()<<endl;
@@ -127,6 +132,21 @@ int Unfolding::LoopOverGen(){
 		TLorentzVector g1= *((TLorentzVector*)(gp_p4->At(pho1)));
 		TLorentzVector g2= *((TLorentzVector*)(gp_p4->At(pho2)));
 		TLorentzVector hgg = g1+g2; 
+
+		//find  jet related quontities
+		Int_t nJets=0;
+		Float_t Ht=0;
+		Int_t jetIdx[10]={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+		for(int iJet= 0 ;iJet< gjets_n; iJet++)
+			{
+			TLorentzVector j= * ((TLorentzVector*)gjets_p4->At(iJet));
+			if(j.Pt() < JetPtCut) continue;
+			if(j.DeltaR(g1)<0.3) continue;
+			if(j.DeltaR(g2)<0.3) continue;
+			jetIdx[nJets]=iJet;
+			Ht+=j.Pt();
+			nJets++;	
+			}
 
 		//get xsWeight: fileName & xsWeight
 		string dName=tGen->GetCurrentFile()->GetName();	
