@@ -53,6 +53,7 @@ public:
 	int InitGen();
 	int InitReco();
 	int InitRecoOptTree(); // not completely implemented
+	int LoopOverRecoOptTree(); // not completely implemented
 	int Write(string output);
 	void SetDebug(int debug_){debug=debug_;};
 	void SetNcat(int ncat){catMap.resize(ncat);for(int i=0;i<ncat;i++)catMap[i]=i;}; //give to each cat a cat

@@ -247,16 +247,63 @@ int Unfolding::InitRecoOptTree(){
 	//delete qqH;
 	//delete ttH;
 	//-------------Set Branch Address ----------
-	int default_int=-999;
-	float default_float=-999.;	
-	TLorentzVector default_p4();
-	int  *default_v_int;
-	float *default_v_float;
-	TLorentzVector *default_v_p4;
-	Container.SetEntry("weight",&default_float,"float"); tReco->SetBranchAddress("full_weight",Container.GetEntryPtr<float*>("weight"));
 	//INCOMPLETE	
 	return 0;
 };
+
+int Unfolding::LoopOverRecoOptTree(){
+//tReco->GetTree()->GetName()
+	Float_t run_=-999;
+	Float_t lumi_=-999; 
+	Double_t event_=-999;
+	Float_t pho1_et_=-999;
+	Float_t pho1_eta_=-999;
+	Float_t pho1_phi_=-999;
+	Float_t pho2_et_=-999;
+	Float_t pho2_eta_=-999;
+	Float_t pho2_phi_=-999;
+	Float_t cat_=-999;
+	Float_t weight_=1;
+	Float_t xsweight_=-999;
+	string Nam_;
+	//SetBranchAddress
+	tReco->SetBranchAddress("xsec_weight",&xsweight_);
+	tReco->SetBranchAddress("full_weight",&weight_);
+	tReco->SetBranchAddress("run",&run_);
+	tReco->SetBranchAddress("lumi",&lumi_);
+	tReco->SetBranchAddress("event",&event_);
+	tReco->SetBranchAddress("eta1",&pho1_eta_);
+	tReco->SetBranchAddress("eta2",&pho2_eta_);
+	tReco->SetBranchAddress("et1",&pho1_et_);
+	tReco->SetBranchAddress("et2",&pho2_et_);
+	tReco->SetBranchAddress("scphi1",&pho1_phi_); //TODO
+	tReco->SetBranchAddress("scphi2",&pho2_phi_);
+	tReco->SetBranchAddress("full_cat",&cat_);
+
+	for(Int_t iEntry=0;iEntry<tReco->GetEntries();iEntry++)
+	{
+	tReco->GetEntry(iEntry);
+	Nam_=tReco->GetTree()->GetName();
+			TLorentzVector pho1,pho2,hgg; 
+			pho1.SetPtEtaPhiM(pho1_et_ ,pho1_eta_,pho1_phi_,0);
+			pho2.SetPtEtaPhiM(pho2_et_ ,pho2_eta_,pho2_phi_,0);
+
+			hgg=pho1+pho2;
+			RecoInfo A(hgg,pho1,pho2,cat_,weight_);
+			if(debug>2) cout<<"[3] hgg reco PT="<< hgg.Pt()<<endl;
+			recoEvents[pair<string,unsigned long long >(Nam_,event_)]=A;
+			if(debug>1) cout<<"[2] recoEvents"<<recoEvents.size()<<endl;
+			if(xsweight_>0)
+				{
+				xSecWeight[Nam_]=xsweight_;
+				}
+			if(debug > 2) printf("[3] Readed values: %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %.1f %s\n",run_,lumi_,event_,pho1_et_,pho1_eta_,pho1_phi_,pho2_et_,pho2_eta_,pho2_phi_,cat_,weight_,xsweight_,Nam_.c_str());
+			assert(weight_>0);
+			assert(xsweight_>0);
+	}
+	return 0 ;
+
+}
 
 int Unfolding::InitReco(){
 	if(debug>0)cout<<"[1] Init Reco"<<endl;
