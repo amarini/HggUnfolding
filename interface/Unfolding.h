@@ -68,7 +68,7 @@ private:
 	TH2D *resp;
 	int debug;
 	GlobalContainer Container;
-	map<unsigned long long, RecoInfo> recoEvents; // map between EventNum ->  reco info
+	map<pair<string,unsigned long long>, RecoInfo> recoEvents; // map between EventNum ->  reco info
 	vector<int> catMap;
 	map<string,float> xSecWeight; 
 	set<string> histoToSave;

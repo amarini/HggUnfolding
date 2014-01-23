@@ -109,6 +109,13 @@ int Unfolding::LoopOverGen(){
 				if ( gp_status[igp] != 1) continue;
 				if ( gp_pdgid[igp] != 22 ) continue;
 				//if ( gp_mother[igp] != 25 ) continue;	// 0 % pass this cut
+				//find a 25 in the full mother chain
+				bool isHiggsSon=false;
+				for( int mother=gp_mother[igp]; mother>=0 && mother != gp_mother[mother]  ;mother=gp_mother[mother])
+					{
+					if (gp_pdgid[mother] == 25) isHiggsSon=true;
+					}
+				if( !isHiggsSon) continue;
 				if(debug>2) printf("[3] igp=%d is a photon, I already have: %d %d \n",igp,pho1,pho2);
 				if(pho1>=0 && pho2>=0 && debug>1) printf("[2] igp=%d is a photon but I already have: %d %d \n",igp,pho1,pho2);
 				if (pho1 <0 ) pho1=igp;
@@ -157,7 +164,8 @@ int Unfolding::LoopOverGen(){
 		//fill matrix and reco(no corrections for bkg);
 		//do the matching to the photons 
 		} //end ph. sp. selection on gen photons
-		map<unsigned long long int, RecoInfo>::iterator reco=recoEvents.find(Container.GetEntry<long>("eventNum"));
+		map< pair<string,unsigned long long int>, RecoInfo>::iterator reco=recoEvents.find(pair<string,unsigned long long>(xSecName,eventNum ));
+		if(debug>2) cout<<"[3] Gen Entry "<<xSecName<<":"<<eventNum<<endl;
 
 		if  (reco!=recoEvents.end() &&
 			(
@@ -181,6 +189,7 @@ int Unfolding::LoopOverGen(){
 				TH2D *default_th2d=new TH2D(name.c_str(),name.c_str(),100,0.,100.,100,0.,100.);
 		       		Container.SetEntry(name,*default_th2d,"TH2D");
 				}
+
 			   Container.GetEntryPtr<TH2D>(name)->Fill( hgg.Pt() , reco->second.hgg.Pt() , reco->second.weight); 
 			}
 		//fill reco histo
@@ -194,8 +203,14 @@ int Unfolding::LoopOverGen(){
 				TH1D *default_th1d=new TH1D(name.c_str(),name.c_str(),100,0.,100.);
 				Container.SetEntry(name,*default_th1d,"TH1D");
 				}
+			if(debug>1) cout<<"[2] hgg reco PT="<< reco->second.hgg.Pt()<< " for "<<xSecName<<":"<<eventNum <<endl;
 			Container.GetEntryPtr<TH1D>(name)->Fill(reco->second.hgg.Pt(),reco->second.weight); 
 			} //exists reco and matched to gen level
+		else{
+			//not matched  or not exists -- only debug
+			if(reco!=recoEvents.end() ) // not matched
+				if(debug>1)cout<<"[2] hgg reco PT NOT MATCHED="<<reco->second.hgg.Pt()<<" DR o-o "<<reco->second.pho1.DeltaR( g1 ) <<" "<< reco->second.pho2.DeltaR( g2 ) << " DR x-x "<<reco->second.pho1.DeltaR( g2 )  <<" "<< reco->second.pho2.DeltaR( g1 ) <<endl;
+		}
 
 		}//loop over gen entries
 
@@ -313,20 +328,12 @@ int Unfolding::LoopOverReco(){
 
 			hgg=pho1+pho2;
 			RecoInfo A(hgg,pho1,pho2,cat_,weight_);
-			recoEvents[event_]=A;
+			if(debug>2) cout<<"[3] hgg reco PT="<< hgg.Pt()<<endl;
+			recoEvents[pair<string,unsigned long long >(Nam_,event_)]=A;
+			if(debug>1) cout<<"[2] recoEvents"<<recoEvents.size()<<endl;
 			if(xsweight_>0)
 				{
-				//string fName=*iFile;// remove /* save in the map
-				//size_t n=fName.rfind('/');
-				//if( n != string::npos)
-				//{
-				//	fName=fName.erase(n); //TODO use sigtyp
-				//	n=fName.find('/');
-				//	if(n!=string::npos)fName=fName.erase(0,n);
-				//	xSecWeight[fName]=xsweight_;
-				//}//exists n
 				xSecWeight[Nam_]=xsweight_;
-				
 				}
 			if(debug > 2) printf("[3] Readed values: %ld %ld %lld %.1f %.1f %.1f %.1f %.1f %.1f %d %.1f %.1f %s\n",run_,lumi_,event_,pho1_e_,pho1_eta_,pho1_phi_,pho2_e_,pho2_eta_,pho2_phi_,cat_,weight_,xsweight_,Nam_);
 			assert(weight_>0);

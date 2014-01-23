@@ -5,7 +5,7 @@ import ROOT
 from optparse import OptionParser
 from glob import glob
 
-DEBUG=1
+DEBUG=2
 
 if(DEBUG>0):print "----- BEGIN -----"
 
