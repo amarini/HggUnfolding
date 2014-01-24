@@ -27,13 +27,25 @@
 
 using namespace std;
 
+class Bins{
+public:
+	Bins(){isConstBin=1;};
+	~Bins(){};
+	int nBins;
+	float xMin;
+	float xMax;
+	Float_t *bins;
+	int isConstBin;
+};
+
 class RecoInfo: public TObject{ 
 public:
 	//costructor
-	RecoInfo(){cat=-1;hgg.SetPxPyPzE(0,0,0,0);weight=0;}
+	RecoInfo(){cat=-1;hgg.SetPxPyPzE(0,0,0,0);weight=0;nJets=0;}
 	RecoInfo(TLorentzVector hgg_,TLorentzVector pho1_,TLorentzVector pho2_,int cat_,float w_){ hgg=hgg_;pho1=pho1_; pho2=pho2_;cat=cat_;weight=w_;}
 	//info I need to keep
-	TLorentzVector hgg,pho1,pho2;
+	TLorentzVector hgg,pho1,pho2,jet1,jet2;
+	int nJets;
 	int cat;
 	float weight;
 	ClassDef(RecoInfo,1);
@@ -64,9 +76,14 @@ public:
 private:
 	TChain *tGen;
 	TChain *tReco;
-	TH1D *gen;
-	TH1D *reco;
-	TH2D *resp;
+
+	//functions
+	float CosThetaStar(TLorentzVector &a,TLorentzVector&b);
+	Bins GetBins(string name);
+	void Fill(string name, float value,float weight);
+	void Fill2D(string name, float value1,float value2,float weight);
+	
+	//objects
 	int debug;
 	GlobalContainer Container;
 	map<pair<string,unsigned long long>, RecoInfo> recoEvents; // map between EventNum ->  reco info

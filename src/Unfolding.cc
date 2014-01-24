@@ -13,9 +13,6 @@ using namespace std;
 
 // --- Constructor 
 Unfolding::Unfolding(){
-	gen=NULL;
-	reco=NULL;
-	resp=NULL;
 	tGen=NULL;
 	tReco=NULL;
 	debug=0;
@@ -23,9 +20,6 @@ Unfolding::Unfolding(){
 };
 // --- Destructor 
 Unfolding::~Unfolding(){
-	if ( gen != NULL ) { gen->Delete(); gen=NULL;}
-	if ( reco != NULL ) { reco->Delete(); reco=NULL;}
-	if ( resp != NULL ) { resp->Delete(); resp=NULL;}
 	if ( tGen != NULL ) { tGen->Delete(); tGen=NULL;}
 	if ( tReco != NULL ) { tReco->Delete(); tReco=NULL;}
 };
@@ -42,43 +36,20 @@ int Unfolding::InitGen(){
 		if(debug>0) cout << R<<endl;
 		assert ( R==1);
 		}
+
 	if(debug>0)
 	for(map<string,float>::iterator it=xSecWeight.begin();it!=xSecWeight.end();it++)
 	 	cout<<"[1] xSecWeight "<<it->first<<" = "<<it->second<<endl;
-	//Set Branches
-	//int default_int=-999;
-	//long default_long=-999;
 
-	//long *default_long=new long;*default_long=-999;
-	//Container.SetEntry("eventNum",default_long,"long");
-	//tGen->SetBranchAddress("event",Container.GetEntryPtr<long>("eventNum"));
-
-	//int *default_int =new int;*default_int=-999;
-	//Container.SetEntry("gp_n",default_int,"int");
-	//tGen->SetBranchAddress("gp_n",Container.GetEntryPtr<int>("gp_n"));
-
-	//int gp_status[MAXN];
-	//int gp_pdgid[MAXN];
-	//tGen->SetBranchAddress("gp_status",default_v_int); // this need to be int * in any case
-	//tGen->SetBranchAddress("gp_pdgid",default_v_int);
-	//tGen->SetBranchAddress("gp_mother",default_v_int);
-	//tGen->SetBranchAddress("gp_p4",default_v_p4);
 	if(debug>1) cout<<"[2]"<<" GenEntries " << tGen->GetEntries()<<endl;
 
-	//int  *default_v_int;
-	//default_v_int =new int[MAXN]; Container.SetEntry("gp_status",default_v_int,"v_int");
-	//default_v_int =new int[MAXN]; Container.SetEntry("gp_pdgid",default_v_int,"v_int");
-	//default_v_int =new int[MAXN]; Container.SetEntry("gp_mother",default_v_int,"v_int");
-	////default_v_p4 = new TLorentzVector[MAXN]; Container.SetEntry("gp_p4",default_v_p4,"v_p4");
-	//tGen->SetBranchAddress("gp_status"	, Container.GetEntry<int*>("gp_status")	); // this need to be int * in any case
-	//tGen->SetBranchAddress("gp_pdgid"	, Container.GetEntry<int*>("gp_pdgid")	);
-	//tGen->SetBranchAddress("gp_mother"	, Container.GetEntry<int*>("gp_mother")	);
 
 	tGen->SetBranchStatus("*",0);
 	tGen->SetBranchStatus("*gp*",1);
 	tGen->SetBranchStatus("event",1);
 	tGen->SetBranchStatus("lumi",1);
 	tGen->SetBranchStatus("run",1);
+	tGen->SetBranchStatus("*genjet_algo1*",1);
 	
 
 	if(debug>1) cout<<"[2]"<<" End Init GEN"<<endl;
@@ -169,17 +140,11 @@ int Unfolding::LoopOverGen(){
 		bool isGen=true;
 		// ph. sp. selection on photons 
 		if (isGen){
-	 	   string name="gen_hgg_pt";
-		   histoToSave.insert(name);
-		   if(debug>0)cout<<"[1] Booking histo "<<name<<" to be saved"<<endl;
 
-		   if( Container.GetEntryPtr<TH1D>(name) == NULL ) // if it does not exists create it 
-			{
-		   	if(debug>1)cout<<"[2] Creating histo "<<name<<" int Container"<<endl;
-			TH1D *default_th1d=new TH1D(name.c_str(),name.c_str(),100,0.,100.);
-		       	Container.SetEntry(name,*default_th1d,"TH1D");
-			}
-		   Container.GetEntryPtr<TH1D>(name)->Fill(hgg.Pt(),xsweight); //weight  -> xsWeight
+	 	   string name="gen_hgg_pt"; Fill(name,hgg.Pt(),xsweight);
+	 	   name="gen_hgg_coststar"; Fill(name,CosThetaStar(g1,g2),xsweight);
+	 	   name="gen_hgg_deltaphi"; Fill(name,fabs(g1.DeltaPhi(g2)),xsweight);
+	 	   name="gen_hgg_y"; Fill(name,hgg.Rapidity(),xsweight);
 
 		//fill matrix and reco(no corrections for bkg);
 		//do the matching to the photons 
@@ -198,33 +163,18 @@ int Unfolding::LoopOverGen(){
 			assert(iCat<catMap.size());
 		//fill maitrix
 			if( isGen){
-			   string name="response_hgg_pt";
-			   name+=Form("_cat%d",iCat);
-
-			   histoToSave.insert(name);
-		   	   if(debug>0)cout<<"[1] Booking histo "<<name<<" to be saved"<<endl;
-			   if( Container.GetEntryPtr<TH2D>(name) == NULL ) // if it does not exists create it 
-				{
-		   	   	if(debug>1)cout<<"[2] Creating histo "<<name<<" in Container"<<endl;
-				TH2D *default_th2d=new TH2D(name.c_str(),name.c_str(),100,0.,100.,100,0.,100.);
-		       		Container.SetEntry(name,*default_th2d,"TH2D");
-				}
-
-			   Container.GetEntryPtr<TH2D>(name)->Fill( hgg.Pt() , reco->second.hgg.Pt() , reco->second.weight); 
+			   string name="response_hgg_pt";name+=Form("_cat%d",iCat);
+			   Fill2D(name, hgg.Pt() , reco->second.hgg.Pt() , reco->second.weight);
+	 	   name="response_hgg_coststar"; name+=Form("_cat%d",iCat); Fill2D(name,CosThetaStar(g1,g2),	CosThetaStar(reco->second.pho1,reco->second.pho2),  reco->second.weight);
+	 	   name="response_hgg_deltaphi"; name+=Form("_cat%d",iCat); Fill2D(name,fabs(g1.DeltaPhi(g2)),	fabs(reco->second.pho1.DeltaPhi(reco->second.pho2))	,reco->second.weight);
+	 	   name="response_hgg_y";	 name+=Form("_cat%d",iCat); Fill2D(name,hgg.Rapidity(),		reco->second.hgg.Rapidity(),reco->second.weight);
 			}
 		//fill reco histo
-			string name="reco_hgg_pt";
-			name+=Form("_cat%d",iCat);
-			   histoToSave.insert(name);
-		   	   if(debug>0)cout<<"[1] Booking histo "<<name<<" to be saved"<<endl;
-			if( Container.GetEntryPtr<TH1D>(name) == NULL ) // if it does not exists create it 
-				{
-		   	   	if(debug>1)cout<<"[2] Creating histo "<<name<<" in Container"<<endl;
-				TH1D *default_th1d=new TH1D(name.c_str(),name.c_str(),100,0.,100.);
-				Container.SetEntry(name,*default_th1d,"TH1D");
-				}
-			if(debug>1) cout<<"[2] hgg reco PT="<< reco->second.hgg.Pt()<< " for "<<xSecName<<":"<<eventNum <<endl;
-			Container.GetEntryPtr<TH1D>(name)->Fill(reco->second.hgg.Pt(),reco->second.weight); 
+			string name="reco_hgg_pt";name+=Form("_cat%d",iCat);
+			Fill(name,reco->second.hgg.Pt(),reco->second.weight);
+	 	   	name="reco_hgg_coststar"; name+=Form("_cat%d",iCat); Fill(name,CosThetaStar(reco->second.pho1,reco->second.pho2),  reco->second.weight);
+	 	   	name="reco_hgg_deltaphi"; name+=Form("_cat%d",iCat); Fill(name,fabs(reco->second.pho1.DeltaPhi(reco->second.pho2))	,reco->second.weight);
+	 	   	name="reco_hgg_y";	 name+=Form("_cat%d",iCat); Fill(name,reco->second.hgg.Rapidity(),reco->second.weight);
 			} //exists reco and matched to gen level
 		else{
 			//not matched  or not exists -- only debug
@@ -299,6 +249,13 @@ int Unfolding::LoopOverRecoOptTree(){
 	tReco->SetBranchAddress("scphi1",&pho1_phi_); //TODO
 	tReco->SetBranchAddress("scphi2",&pho2_phi_);
 	tReco->SetBranchAddress("full_cat",&cat_);
+	//TODO Implement Jets in txt Sync and OptTree. I don't have all info
+	Float_t jet1_eta,jet1_pt,jet1_phi;
+	Float_t jet2_eta,jet2_pt,jet2_phi;
+
+	Int_t njets20;
+
+	//tReco->SetBranchAddress("");
 
 	for(Int_t iEntry=0;iEntry<tReco->GetEntries();iEntry++)
 	{
@@ -425,3 +382,63 @@ for (set<string>::iterator hName=histoToSave.begin();hName!=histoToSave.end();hN
 	}
 	out->Close();
 };
+
+float Unfolding::CosThetaStar(TLorentzVector &a,TLorentzVector&b)
+{
+	TLorentzVector h=a+b;
+	TLorentzVector a1=a;
+	a1.Boost(-h.BoostVector());
+	return -a1.CosTheta();
+}
+
+
+Bins Unfolding::GetBins(string name)
+{
+	Bins R;
+	if( name.find("hgg_pt")!=string::npos)		{R.nBins=60; R.xMin=0;R.xMax=120;}
+	else if( name.find("hgg_coststar")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=1;}
+	else if( name.find("hgg_deltaphi")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=3.1416;}
+	else if( name.find("hgg_y")!=string::npos)		{R.nBins=5; R.xMin=0;R.xMax=5;}
+	else {
+		if(debug>0) cout<<"[1] Observable "<<name<<" unknown binnig"<<endl;
+		R.nBins=100;R.xMin=0;R.xMax=100;
+	}
+
+	return R;
+}
+
+void Unfolding::Fill(string name, float value, float weight)
+{
+		   if( histoToSave.insert(name).second && debug>0) cout<<"[1] Booking histo "<<name<<" to be saved"<<endl;
+
+		   if( Container.GetEntryPtr<TH1D>(name) == NULL ) // if it does not exists create it 
+			{
+		   	if(debug>1)cout<<"[2] Creating histo "<<name<<" int Container"<<endl;
+			TH1D *default_th1d = NULL;
+			Bins R=GetBins(name);
+			if(R.isConstBin)
+				default_th1d=new TH1D(name.c_str(),name.c_str(),R.nBins,R.xMin,R.xMax);
+			else default_th1d=new TH1D(name.c_str(),name.c_str(),R.nBins,R.bins);
+		       	Container.SetEntry(name,*default_th1d,"TH1D");
+			}
+		   Container.GetEntryPtr<TH1D>(name)->Fill(value,weight); //weight  -> xsWeight
+		   return; 
+}
+
+void Unfolding::Fill2D(string name, float value1,float value2, float weight)
+{
+		   if( histoToSave.insert(name).second && debug>0) cout<<"[1] Booking histo "<<name<<" to be saved"<<endl;
+
+		   if( Container.GetEntryPtr<TH2D>(name) == NULL ) // if it does not exists create it 
+			{
+		   	if(debug>1)cout<<"[2] Creating histo "<<name<<" int Container"<<endl;
+			TH2D *default_th2d;//=new TH2D(name.c_str(),name.c_str(),100,0.,100.,100,0.,100);
+			Bins R=GetBins(name);
+			if(R.isConstBin)
+				default_th2d=new TH2D(name.c_str(),name.c_str(),R.nBins,R.xMin,R.xMax,R.nBins,R.xMin,R.xMax);
+			else default_th2d=new TH2D(name.c_str(),name.c_str(),R.nBins,R.bins,R.nBins,R.bins);
+		       	Container.SetEntry(name,*default_th2d,"TH2D");
+			}
+		   Container.GetEntryPtr<TH2D>(name)->Fill(value1,value2,weight); //weight  -> xsWeight
+		   return; 
+}
