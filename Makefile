@@ -29,7 +29,9 @@ lxplusinfo:
 	@echo You are on lxplus - $a : $(HOSTNAME)
 ROOUNFOLD_BASE=/afs/cern.ch/user/a/amarini/work/RooUnfold-1.1.1/
 CXXFLAGS+=-I$(ROOUNFOLD_BASE)/include/ 
-LDFLAGS+=-L$(ROOUNFOLD_BASE)/
+LDFLAGS+=-L$(ROOUNFOLD_BASE)/ 
+# or add to the LD_LIBRARY_PATH
+LDFLAGS+=-Wl,-rpath,$(ROOUNFOLD_BASE)
 endif
 
 LDFLAGS+=-L$(ROOFIT_BASE)/lib $(ROOTLIBS) -lz -lRooUnfold

@@ -5,7 +5,7 @@ import ROOT
 from optparse import OptionParser
 from glob import glob
 
-DEBUG=2
+DEBUG=1
 
 if(DEBUG>0):print "----- BEGIN -----"
 
@@ -71,10 +71,10 @@ print "Adding map information -> ggh_8TeV"
 #Unfolder.xSecMapDirToNam["gen"]="ggH_8TeV"
 
 # should match with treeNames for opttree
-Unfolder.xSecMapDirToNam["GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="ggh_8TeV"
-Unfolder.xSecMapDirToNam["VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="vbf_8TeV"
-Unfolder.xSecMapDirToNam["TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="tth_8TeV"
-Unfolder.xSecMapDirToNam["WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2"]="wzh_8TeV"
+Unfolder.xSecMapDirToNam["GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="ggh_m125_8TeV"
+Unfolder.xSecMapDirToNam["VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="vbf_m125_8TeV"
+Unfolder.xSecMapDirToNam["TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="tth_m125_8TeV"
+Unfolder.xSecMapDirToNam["WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2"]="wzh_m125_8TeV"
 print " >---<"
 
 #EOS

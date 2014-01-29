@@ -34,7 +34,7 @@ int Unfolding::InitGen(){
 		if(debug>0)cout<<"[1]"<< " Adding file: "<<*iFile<<" to the list of gen Chains: ";
 		int R=tGen->Add( iFile->c_str() );
 		if(debug>0) cout << R<<endl;
-		assert ( R==1);
+		//assert ( R==1);
 		}
 
 	if(debug>0)
@@ -132,6 +132,14 @@ int Unfolding::LoopOverGen(){
 		assert( xSecMapDirToNam.find(dName) != xSecMapDirToNam.end() );
 		string xSecName=xSecMapDirToNam[dName];
 
+		if( xSecWeight.find(xSecName) == xSecWeight.end() )
+			{
+			cout<<"------ ERROR -------" <<endl;
+			cout<<"dir= "<<dName<<endl;
+			cout<<"xSecName= "<<xSecName<<endl;
+			for(map<string,float>::iterator it= xSecWeight.begin();it!=xSecWeight.end();it++)
+				cout<<"xSecWeight "<<it->first <<" --- "<<it->second<<endl;
+			}
 		assert( xSecWeight.find(xSecName) != xSecWeight.end() );	
 		float xsweight=xSecWeight[xSecName];
 
@@ -223,6 +231,9 @@ int Unfolding::InitRecoOptTree(){
 
 int Unfolding::LoopOverRecoOptTree(){
 //tReco->GetTree()->GetName()
+	if(debug>0) cout<<"Init Opt Tree"<<endl;
+	InitRecoOptTree();
+	if(debug>0) cout<<"Loop Over Opt Tree"<<endl;
 	Float_t run_=-999;
 	Float_t lumi_=-999; 
 	Double_t event_=-999;
