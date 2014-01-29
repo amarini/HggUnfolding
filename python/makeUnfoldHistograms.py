@@ -21,46 +21,68 @@ parser.add_option("","--recodir" ,dest='recodir',type='string',help="Directory w
 GenDirectory="/Users/andreamarini/Documents/HggDifferential/samples/gen"
 RecoDirectory="/Users/andreamarini/Documents/HggDifferential/samples/reco"
 
+
 ROOT.gSystem.Load("libUnfolding.so")
 
 
 Unfolder = ROOT.Unfolding();
 
 Unfolder.SetDebug(DEBUG);
-Unfolder.SetNcat(14);
+Unfolder.SetNcat(18);
 
 
 # merge relevant categories -- use modulus and loops
-Unfolder.SetCat(0 ,0);
-Unfolder.SetCat(4 ,0);
-Unfolder.SetCat(8 ,0);
-Unfolder.SetCat(12,0);
+Unfolder.SetCatsModulo(6); #~n. of cat per bin
+#Unfolder.SetCat(0 ,0);
+#Unfolder.SetCat(4 ,0);
+#Unfolder.SetCat(8 ,0);
+#Unfolder.SetCat(12,0);
+#
+#Unfolder.SetCat(1 ,1);
+#Unfolder.SetCat(5 ,1);
+#Unfolder.SetCat(9 ,1);
+#Unfolder.SetCat(13,1);
+#
+#Unfolder.SetCat(2 ,2);
+#Unfolder.SetCat(6 ,2);
+#Unfolder.SetCat(10 ,2);
+#
+#Unfolder.SetCat(3 ,3);
+#Unfolder.SetCat(7 ,3);
+#Unfolder.SetCat(11 ,3);
 
-Unfolder.SetCat(1 ,1);
-Unfolder.SetCat(5 ,1);
-Unfolder.SetCat(9 ,1);
-Unfolder.SetCat(13,1);
 
-Unfolder.SetCat(2 ,2);
-Unfolder.SetCat(6 ,2);
-Unfolder.SetCat(10 ,2);
+#BOOK FILES
+#GenDirectory=[]
+#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"
+#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"
+#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"
+#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2"
 
-Unfolder.SetCat(3 ,3);
-Unfolder.SetCat(7 ,3);
-Unfolder.SetCat(11 ,3);
+#filesGen=glob(GenDirectory+"/*.root")
+#filesReco=glob(RecoDirectory+"/*.txt")
+#for gF in filesGen:
+#	Unfolder.genFiles.push_back(gF);
+#for rF in filesReco:
+#	Unfolder.recoFiles.push_back(rF);
+#
 
-# TODO implement eos - can directly pass * because is read trough a TChain Add
-filesGen=glob(GenDirectory+"/*.root")
-filesReco=glob(RecoDirectory+"/*.txt")
+print "Adding map information -> ggh_8TeV"
+#Unfolder.xSecMapDirToNam["gen"]="ggH_8TeV"
 
-print "Add gen -> ggH_8TeV"
-Unfolder.xSecMapDirToNam["gen"]="ggH_8TeV"
+# should match with treeNames for opttree
+Unfolder.xSecMapDirToNam["GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="ggh_8TeV"
+Unfolder.xSecMapDirToNam["VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="vbf_8TeV"
+Unfolder.xSecMapDirToNam["TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="tth_8TeV"
+Unfolder.xSecMapDirToNam["WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2"]="wzh_8TeV"
 print " >---<"
 
-for gF in filesGen:
-	Unfolder.genFiles.push_back(gF);
-for rF in filesReco:
-	Unfolder.recoFiles.push_back(rF);
+#EOS
+Unfolder.recoFiles.push_back('root://eoscms///store/user/chanon/HGG/differentialnalysis/histograms_CMS-HGG_DiffAna_v1.root')
+Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
+Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
+Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
+Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2/*.root')
 
 print "Going to Loop"
 #Unfolder.LoopOverReco();
