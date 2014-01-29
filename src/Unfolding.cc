@@ -430,6 +430,7 @@ void Unfolding::Fill(string name, float value, float weight)
 			if(R.isConstBin)
 				default_th1d=new TH1D(name.c_str(),name.c_str(),R.nBins,R.xMin,R.xMax);
 			else default_th1d=new TH1D(name.c_str(),name.c_str(),R.nBins,R.bins);
+			default_th1d->Sumw2();
 		       	Container.SetEntry(name,*default_th1d,"TH1D");
 			}
 		   Container.GetEntryPtr<TH1D>(name)->Fill(value,weight); //weight  -> xsWeight
@@ -448,6 +449,7 @@ void Unfolding::Fill2D(string name, float value1,float value2, float weight)
 			if(R.isConstBin)
 				default_th2d=new TH2D(name.c_str(),name.c_str(),R.nBins,R.xMin,R.xMax,R.nBins,R.xMin,R.xMax);
 			else default_th2d=new TH2D(name.c_str(),name.c_str(),R.nBins,R.bins,R.nBins,R.bins);
+			default_th2d->Sumw2();
 		       	Container.SetEntry(name,*default_th2d,"TH2D");
 			}
 		   Container.GetEntryPtr<TH2D>(name)->Fill(value1,value2,weight); //weight  -> xsWeight
