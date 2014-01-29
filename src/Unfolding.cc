@@ -442,3 +442,18 @@ void Unfolding::Fill2D(string name, float value1,float value2, float weight)
 		   Container.GetEntryPtr<TH2D>(name)->Fill(value1,value2,weight); //weight  -> xsWeight
 		   return; 
 }
+
+void Unfolding::SetCatsModulo(int M)
+{
+	int nCat=catMap.size();
+	if( nCat % M != 0 ) 
+		{
+		cout<<"error nCats" <<nCat<<" not modulo "<<M<<endl;
+		return;
+		}
+	for( int iCat = 0 ;iCat < nCat ;iCat++)
+	{
+		SetCat(iCat, iCat%M);
+	}
+	return;
+}
