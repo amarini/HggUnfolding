@@ -165,6 +165,22 @@ TMatrixD MergeAndUnfold::getCovMatrix(TH1 *h){
 	}
 	return r;
 }
+TH2D*	 MergeAndUnfold::getCovMatrixH(TH1 *h)
+{
+	int nBins=h->GetNbinsX();
+	Double_t Bins[nBins+2];
+	for(int iBin=1;iBin<=nBins+1;iBin++)
+		Bins[iBin-1]=h->GetBinLowEdge(iBin); //offset by 1
+	TH2D* R=new TH2D(Form("cov_%s",h->GetName()),h->GetName(),nBins,Bins,nBins,Bins);
+	for(int iBin=0;iBin<nBins+1;iBin++)
+	for(int jBin=0;jBin<nBins+1;jBin++)
+		{
+		R->SetBinContent(iBin+1,jBin+1,0);
+		if( iBin == jBin) 
+			R->SetBinContent(iBin+1,jBin+1,pow(h->GetBinError(iBin+1),2));
+		}
+	return R;
+}
 
 int MergeAndUnfold::FillVectors()
 {
@@ -191,7 +207,8 @@ int MergeAndUnfold::FillVectors()
 		v_m[i].ResizeTo(nBinRecoPerCat,nBinGen);
 		   v_m[i]=getMatrix( &matrix[i] );
 		v_s[i].ResizeTo(nBinRecoPerCat,nBinRecoPerCat);
-		   v_s[i]=getCovMatrix( &histos[i] );
+		   //v_s[i]=getCovMatrix( &histos[i] );
+		   v_s[i]=getMatrix( &covMatrix[i]);
 	}
 
 	//get efficiency and multiply matrix TODO, check this part
@@ -237,6 +254,17 @@ int MergeAndUnfold::AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp)
 	if (gen.size()==0)gen.push_back( *(TH1D*)(g->Clone(Form("gen_cat%d", int(gen.size())))) );
 	reco.push_back( *(TH1D*)(r->Clone(Form("reco_cat%d",int(reco.size())))) );
 	matrix.push_back( *(TH2D*)(resp->Clone(Form("matrix_cat%d",int(matrix.size())))) );
+	covMatrix.push_back( *(TH2D*)(getCovMatrixH(h)->Clone(Form("covMatrix_cat%d",int(covMatrix.size())))) );
+	return int(histos.size())-1;
+}
+
+int MergeAndUnfold::AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp,TH2D*cov)
+{
+	histos.push_back( *(TH1D*)(h->Clone(Form("histo_cat%d",int(histos.size())))) );
+	if (gen.size()==0)gen.push_back( *(TH1D*)(g->Clone(Form("gen_cat%d", int(gen.size())))) );
+	reco.push_back( *(TH1D*)(r->Clone(Form("reco_cat%d",int(reco.size())))) );
+	matrix.push_back( *(TH2D*)(resp->Clone(Form("matrix_cat%d",int(matrix.size())))) );
+	covMatrix.push_back( *(TH2D*)(cov->Clone(Form("covMatrix_cat%d",int(covMatrix.size())))) );
 	return int(histos.size())-1;
 }
 
