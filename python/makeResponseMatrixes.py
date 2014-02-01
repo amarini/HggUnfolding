@@ -2,6 +2,8 @@
 
 import os, sys, array
 import ROOT 
+ROOT.gROOT.SetBatch(1)
+
 from optparse import OptionParser
 from glob import glob
 
@@ -92,26 +94,26 @@ print " >---<"
 
 #Read Bins from dat
 if DEBUG > 0: print "Going to set Bins"
-HistoBins['hgg_pt'].SetNonConst(); #also call malloc for *bins with 100 spaces
+Unfolder.HistoBins['hgg_pt'].SetNonConst(); #also call malloc for *bins with 100 spaces
 iBin=0
 for pt in config['Pt']:
-	HistoBins['hgg_pt'].bins[iBin]=pt
+	Unfolder.HistoBins['hgg_pt'].bins[iBin]=pt
 	iBin+=1;
-	HistoBins['hgg_pt'].nBins=iBin;
+	Unfolder.HistoBins['hgg_pt'].nBins=iBin;
 
-HistoBins['hgg_coststar'].SetNonConst(); 
+Unfolder.HistoBins['hgg_coststar'].SetNonConst(); 
 iBin=0
 for cost in config['CosThetaStar']:
-	HistoBins['hgg_coststar'].bins[iBin]=cost
+	Unfolder.HistoBins['hgg_coststar'].bins[iBin]=cost
 	iBin+=1;
-	HistoBins['hgg_coststar'].nBins=iBin
+	Unfolder.HistoBins['hgg_coststar'].nBins=iBin
 
-HistoBins['hgg_y'].SetNonConst(); 
+Unfolder.HistoBins['hgg_y'].SetNonConst(); 
 iBin=0
 for y in config['Y']:
-	HistoBins['hgg_y'].bins[iBin]=y
+	Unfolder.HistoBins['hgg_y'].bins[iBin]=y
 	iBin+=1;
-	HistoBins['hgg_y'].nBins=iBin;
+	Unfolder.HistoBins['hgg_y'].nBins=iBin;
 
 if DEBUG > 0: print " -- "
 ######################
