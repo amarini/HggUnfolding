@@ -12,14 +12,11 @@ if(DEBUG>0):print "----- BEGIN -----"
 if(DEBUG>0):print "-PARSING OPTIONS-"
 usage = "usage: %prog [options] arg1 arg2"
 parser=OptionParser(usage=usage)
-parser.add_option("","--gendir" ,dest='gendir',type='string',help="Directory of gen files",default="/Users/andreamarini/Documents/HggDifferential/samples/gen")
-parser.add_option("","--recodir" ,dest='recodir',type='string',help="Directory with reco txt files",default="/Users/andreamarini/Documents/HggDifferential/samples/reco")
+parser.add_option("-i","--datfile" ,dest='datfile',type='string',help="datfiles",default="data/variables.dat")
 
 (options,args)=parser.parse_args()
 
 # change to options
-GenDirectory="/Users/andreamarini/Documents/HggDifferential/samples/gen"
-RecoDirectory="/Users/andreamarini/Documents/HggDifferential/samples/reco"
 
 
 ROOT.gSystem.Load("libUnfolding.so")
@@ -51,38 +48,73 @@ Unfolder.SetCatsModulo(6); #~n. of cat per bin
 #Unfolder.SetCat(7 ,3);
 #Unfolder.SetCat(11 ,3);
 
+print "inserting in path cwd"
+sys.path.insert(0,os.getcwd())
+print "inserting in path cwd/python"
+sys.path.insert(0,os.getcwd()+'/python')
+from readDat import *
 
-#BOOK FILES
-#GenDirectory=[]
-#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"
-#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"
-#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"
-#GenDirectory+="/eos/cms/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2"
+config = ReadDat( options.datfile );
 
-#filesGen=glob(GenDirectory+"/*.root")
-#filesReco=glob(RecoDirectory+"/*.txt")
-#for gF in filesGen:
-#	Unfolder.genFiles.push_back(gF);
-#for rF in filesReco:
-#	Unfolder.recoFiles.push_back(rF);
-#
+if DEBUG>0:
+	PrintDat(config)
 
 print "Adding map information -> ggh_8TeV"
-#Unfolder.xSecMapDirToNam["gen"]="ggH_8TeV"
+
+iFile=0;
+for f in config['GenFiles']:
+	Unfolder.genFiles.push_back('root://eoscms//'+f);
+	#get Directory matching
+	n=f.rfind('/')
+	d=f[0:n]
+	n=f.rfind('/')
+	d=d[n:]
+	Unfolder.xSecMapDirToNam[d]=config['Map'][iFile];
+	iFile+=1
+for f in config['GenFiles']:
+	Unfolder.recoFiles.push_back('root://eoscms//'+f);
 
 # should match with treeNames for opttree
-Unfolder.xSecMapDirToNam["GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="ggh_m125_8TeV"
-Unfolder.xSecMapDirToNam["VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="vbf_m125_8TeV"
-Unfolder.xSecMapDirToNam["TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="tth_m125_8TeV"
-Unfolder.xSecMapDirToNam["WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2"]="wzh_m125_8TeV"
+#Unfolder.xSecMapDirToNam["GluGluToHToGG_M-125_StdMaterial"]="ggh_m125_8TeV"
+#Unfolder.xSecMapDirToNam["VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="vbf_m125_8TeV"
+#Unfolder.xSecMapDirToNam["TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="tth_m125_8TeV"
+#Unfolder.xSecMapDirToNam["WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2"]="wzh_m125_8TeV"
 print " >---<"
 
 #EOS
-Unfolder.recoFiles.push_back('root://eoscms///store/user/chanon/HGG/differentialnalysis/histograms_CMS-HGG_DiffAna_v1.root')
-Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
-Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
-Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
-Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2/*.root')
+#Unfolder.recoFiles.push_back('root://eoscms///store/user/chanon/HGG/differentialnalysis/histograms_CMS-HGG_DiffAna_v1.root')
+#High Stat
+#Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg/V15_00_11/ExtraMaterial/GluGluToHToGG_M-125_StdMaterial/*.root')
+#Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
+#Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
+#Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2/*.root')
+
+
+#Read Bins from dat
+if DEBUG > 0: print "Going to set Bins"
+HistoBins['hgg_pt'].SetNonConst(); #also call malloc for *bins with 100 spaces
+iBin=0
+for pt in config['Pt']:
+	HistoBins['hgg_pt'].bins[iBin]=pt
+	iBin+=1;
+	HistoBins['hgg_pt'].nBins=iBin;
+
+HistoBins['hgg_coststar'].SetNonConst(); 
+iBin=0
+for cost in config['CosThetaStar']:
+	HistoBins['hgg_coststar'].bins[iBin]=cost
+	iBin+=1;
+	HistoBins['hgg_coststar'].nBins=iBin
+
+HistoBins['hgg_y'].SetNonConst(); 
+iBin=0
+for y in config['Y']:
+	HistoBins['hgg_y'].bins[iBin]=y
+	iBin+=1;
+	HistoBins['hgg_y'].nBins=iBin;
+
+if DEBUG > 0: print " -- "
+######################
 
 print "Going to Loop"
 #Unfolder.LoopOverReco();

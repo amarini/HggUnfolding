@@ -36,6 +36,7 @@ public:
 	float xMax;
 	Float_t *bins;
 	int isConstBin;
+	void SetNonConst(){ isConstBin=0; bins=new Float_t[100];}
 };
 
 class RecoInfo: public TObject{ 
@@ -74,6 +75,7 @@ public:
 	void SetCatsModulo(int M);
 	
 	map<string,string> xSecMapDirToNam;
+	map<string,Bins> HistoBins; //fill this to make it configurable from a dat file
 private:
 	TChain *tGen;
 	TChain *tReco;

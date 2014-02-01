@@ -406,6 +406,9 @@ float Unfolding::CosThetaStar(TLorentzVector &a,TLorentzVector&b)
 Bins Unfolding::GetBins(string name)
 {
 	Bins R;
+	map<string,Bins>::iterator i=HistoBins.find(name);
+	if(i != HistoBins.end() ) return i->second;
+
 	if( name.find("hgg_pt")!=string::npos)		{R.nBins=60; R.xMin=0;R.xMax=120;}
 	else if( name.find("hgg_coststar")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=1;}
 	else if( name.find("hgg_deltaphi")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=3.1416;}
