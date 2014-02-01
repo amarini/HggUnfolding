@@ -21,14 +21,14 @@ using namespace std;
 
 class MergeAndUnfold:public TObject{
 public:
-	MergeAndUnfold(){useOverFlow=0;regIndex=-1;covMatrix.resize(0);}
+	MergeAndUnfold(){useOverFlow=0;regIndex=-1;covMatrix.clear();}
 	int AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp); //return catNum on success
 	int AddCat(TH1D *h,TH1D *g,TH1D *r,TH2D *resp,TH2D* cov); //return catNum on success
 	int AddReg(double delta); 
 	void Reset(); 
 	TVectorD Unfold(TMatrixD *E=NULL);
 	TH1D* UnfoldMinimum(); 
-	TH1D* UnfoldLogLikelihoodMinimum(){};
+	TH1D* UnfoldLogLikelihoodMinimum();
 	TH1D* getHisto(TVectorD &v, TMatrixD &e); 
 	TH1D* UnfoldSvd(vector<int> v_kreg);	
 	TH1D* UnfoldBayes(int niter=3);// use RooUnfold and merge
@@ -53,6 +53,7 @@ private:
 	TH2D*	 getCovMatrixH(TH1 *h);
 	TVectorD integrateRow(TMatrixD &a);
 	TVectorD integrateCol(TMatrixD &a);
+	void ConstructSuperMatrixes();
 
 	vector<TVectorD> v_h;
 	vector<TVectorD> v_g;
@@ -61,6 +62,9 @@ private:
 	vector<TMatrixD> v_s; //covariance matrix
 
 	int regIndex;
+
+	TMatrixD S,K;
+	TVectorD l,y; 
 public:
 	ClassDef(MergeAndUnfold,1);
 };

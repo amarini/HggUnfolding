@@ -2,15 +2,8 @@
 #include <assert.h>
 
 
-// ---------------------- MACRO THAT DO UNFOLDING --------------
-TVectorD MergeAndUnfold::Unfold(TMatrixD *E){
-
-//convert histos in VectorD
-FillVectors();
-
+void MergeAndUnfold::ConstructSuperMatrixes(){
 //construct super matrixes by chaining all the other ones
-TMatrixD S,K;
-TVectorD l,y; 
 
 //Get Unfold distribution
 //l=S.(kS)+ .y
@@ -66,6 +59,17 @@ assert( K.GetNcols() == nBinGen );
 assert( K.GetNrows() == nBinReco);
 assert( S.GetNrows() == nBinReco);
 assert( S.GetNcols() == nBinReco);
+
+return;
+
+}
+
+// ---------------------- MACRO THAT DOES UNFOLDING --------------
+TVectorD MergeAndUnfold::Unfold(TMatrixD *E){
+
+//convert histos in VectorD
+FillVectors();
+ConstructSuperMatrixes();
 
 //is defined * and + .Invert();
 TMatrixD Kt(K.GetNcols(),K.GetNrows()); Kt.Transpose(K);
@@ -275,6 +279,7 @@ void MergeAndUnfold::Reset()
 	matrix.clear();
 	gen.clear();
 	reco.clear();
+	covMatrix.clear();
 	useOverFlow=0;
 	return ;
 }
@@ -440,4 +445,14 @@ TH1D* MergeAndUnfold::UnfoldBayes(int niter){
 		}
 
 	return r;
+}
+
+
+TH1D* MergeAndUnfold::UnfoldLogLikelihoodMinimum(){
+	FillVectors();
+	ConstructSuperMatrixes();
+	// I need to have a likelihood function to minimize 
+	TH1D * r;//=(TH1D*);
+	return r;	
+
 }
