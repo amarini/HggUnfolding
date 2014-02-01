@@ -65,6 +65,7 @@ print "Adding map information -> ggh_8TeV"
 
 iFile=0;
 for f in config['GenFiles']:
+	if DEBUG>0:print "adding file '"+f+"' to GEN"
 	Unfolder.genFiles.push_back('root://eoscms//'+f);
 	#get Directory matching
 	n=f.rfind('/')
@@ -73,7 +74,8 @@ for f in config['GenFiles']:
 	d=d[n:]
 	Unfolder.xSecMapDirToNam[d]=config['Map'][iFile];
 	iFile+=1
-for f in config['GenFiles']:
+for f in config['RecoFiles']:
+	if DEBUG>0:print "adding file '"+f+"' to RECO"
 	Unfolder.recoFiles.push_back('root://eoscms//'+f);
 
 # should match with treeNames for opttree
