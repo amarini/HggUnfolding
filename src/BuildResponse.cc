@@ -129,7 +129,7 @@ int BuildResponse::LoopOverGen(){
 		if( n != string::npos )dName=dName.erase(0,n+1);
 
 		if(debug>1)cout<<"[2] Dir = "<<dName<<endl;
-		if ( xSecMapDirToNam.find(dName) != xSecMapDirToNam.end())
+		if ( xSecMapDirToNam.find(dName) == xSecMapDirToNam.end())
 			{
 			cout<<" ----- ERROR -------"<<endl;
 			cout<<"Dir Name="<<dName<<endl;
