@@ -57,7 +57,7 @@ $(shell mkdir -p $(BINDIR) )
 
 #Packages=GlobalContainer Unfolding
 ## Sort needed for building libraries: LAST <- FIRST
-Packages=Unfolding GlobalContainer MergeAndUnfold
+Packages=BuildResponse GlobalContainer MergeAndUnfold
 ObjFiles=$(patsubst %, $(BINDIR)/%.$(ObjSuf),$(Packages) )
 DictObjFiles=$(patsubst %, $(BINDIR)/%Dict.$(ObjSuf),$(Packages) )
 DictSrcFiles=$(patsubst %, $(BINDIR)/%Dict.$(SrcSuf),$(Packages) )

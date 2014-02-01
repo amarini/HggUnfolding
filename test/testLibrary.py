@@ -17,7 +17,7 @@ if DEBUG>0: print "-> Loading Library"
 ROOT.gSystem.Load("libUnfolding.so");
 
 #try to construct each object to check library Dictionaries
-Contstructor = ROOT.Unfolding()
+Contstructor = ROOT.BuildResponse()
 RecoInfo = ROOT.RecoInfo()
 GC= ROOT.GlobalContainer()
 Unfolder=ROOT.MergeAndUnfold()

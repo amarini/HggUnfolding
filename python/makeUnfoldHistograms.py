@@ -22,7 +22,7 @@ parser.add_option("-i","--datfile" ,dest='datfile',type='string',help="datfiles"
 ROOT.gSystem.Load("libUnfolding.so")
 
 
-Unfolder = ROOT.Unfolding();
+Unfolder = ROOT.BuildResponse();
 
 Unfolder.SetDebug(DEBUG);
 Unfolder.SetNcat(18);
