@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os, sys, array
+import logging
 import ROOT 
 ROOT.gROOT.SetBatch(1)
 
@@ -14,11 +15,18 @@ if(DEBUG>0):print "----- BEGIN -----"
 if(DEBUG>0):print "-PARSING OPTIONS-"
 usage = "usage: %prog [options] arg1 arg2"
 parser=OptionParser(usage=usage)
-parser.add_option("-i","--datfile" ,dest='datfile',type='string',help="datfiles",default="data/variables.dat")
+parser.add_option("-i","--datfile" ,dest='datfile',type='string',help="datfiles = %default",default="data/variables.dat")
+parser.add_option("-l","--logfile" ,dest='logfile',type='string',help="logfile = %default",default="log.txt")
 
 (options,args)=parser.parse_args()
 
 # change to options
+
+print "Loading log configuration"
+from Tee import *
+if options.logfile:
+	log=Tee(options.logfile,"w")
+#
 
 print "inserting in path cwd"
 sys.path.insert(0,os.getcwd())
