@@ -20,6 +20,17 @@ parser.add_option("-i","--datfile" ,dest='datfile',type='string',help="datfiles"
 
 # change to options
 
+print "inserting in path cwd"
+sys.path.insert(0,os.getcwd())
+print "inserting in path cwd/python"
+sys.path.insert(0,os.getcwd()+'/python')
+from readDat import *
+
+config = ReadDat( options.datfile );
+
+if DEBUG>0:
+	PrintDat(config)
+
 
 ROOT.gSystem.Load("libUnfolding.so")
 
@@ -52,16 +63,6 @@ Unfolder.SetCatsModulo(config['CatMod']); #~n. of cat per bin
 #Unfolder.SetCat(7 ,3);
 #Unfolder.SetCat(11 ,3);
 
-print "inserting in path cwd"
-sys.path.insert(0,os.getcwd())
-print "inserting in path cwd/python"
-sys.path.insert(0,os.getcwd()+'/python')
-from readDat import *
-
-config = ReadDat( options.datfile );
-
-if DEBUG>0:
-	PrintDat(config)
 
 print "Adding map information -> ggh_8TeV"
 
@@ -131,5 +132,6 @@ Unfolder.LoopOverGen();
 print "Going to Write"
 Unfolder.Write("UnfoldMatrixes.root");
 
+print " --- DONE ---"
 
 		
