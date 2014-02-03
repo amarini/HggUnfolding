@@ -17,6 +17,8 @@ def ReadDat(inputFileName):
 			R[ parts[0] ] = []
 			for pt in parts[1].split(','):
 				R[ parts[0] ].append( float(pt) )
+		if parts[0]=='nCat' or parts[0] == 'CatMod':
+			R[ parts[0] ] = int(parts[1])
 	return R
 
 def PrintDat(dat):

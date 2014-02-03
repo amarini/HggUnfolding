@@ -27,11 +27,13 @@ ROOT.gSystem.Load("libUnfolding.so")
 Unfolder = ROOT.BuildResponse();
 
 Unfolder.SetDebug(DEBUG);
-Unfolder.SetNcat(18);
+
+
+Unfolder.SetNcat(config['nCat']);
 
 
 # merge relevant categories -- use modulus and loops
-Unfolder.SetCatsModulo(6); #~n. of cat per bin
+Unfolder.SetCatsModulo(config['CatMod']); #~n. of cat per bin
 #Unfolder.SetCat(0 ,0);
 #Unfolder.SetCat(4 ,0);
 #Unfolder.SetCat(8 ,0);
@@ -70,8 +72,9 @@ for f in config['GenFiles']:
 	#get Directory matching
 	n=f.rfind('/')
 	d=f[0:n]
-	n=f.rfind('/')
-	d=d[n:]
+	n=d.rfind('/')
+	d=d[n+1:]
+	if DEBUG>0:print 'Going to add to map dir="' + d + '" Nam="'+config['Map'][iFile] + '"'
 	Unfolder.xSecMapDirToNam[d]=config['Map'][iFile];
 	iFile+=1
 for f in config['RecoFiles']:
