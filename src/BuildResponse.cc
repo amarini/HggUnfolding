@@ -156,7 +156,7 @@ int BuildResponse::LoopOverGen(){
 		// ph. sp. selection on photons 
 		if (isGen){
 
-	 	   string name="gen_hgg_pt"; Fill(name,hgg.Pt(),xsweight);
+	 	   string name="gen_hgg_pt"; Fill(name,hgg.Pt() * 125./ hgg.M(),xsweight);
 	 	   name="gen_hgg_coststar"; Fill(name,CosThetaStar(g1,g2),xsweight);
 	 	   name="gen_hgg_deltaphi"; Fill(name,fabs(g1.DeltaPhi(g2)),xsweight);
 	 	   name="gen_hgg_y"; Fill(name,hgg.Rapidity(),xsweight);
@@ -179,14 +179,14 @@ int BuildResponse::LoopOverGen(){
 		//fill maitrix
 			if( isGen){
 			   string name="response_hgg_pt";name+=Form("_cat%d",iCat);
-			   Fill2D(name, hgg.Pt() , reco->second.hgg.Pt() , reco->second.weight);
+			   Fill2D(name, hgg.Pt() *125./hgg.M() , reco->second.hgg.Pt()* 125./reco->second.hgg.M()  , reco->second.weight);
 	 	   name="response_hgg_coststar"; name+=Form("_cat%d",iCat); Fill2D(name,CosThetaStar(g1,g2),	CosThetaStar(reco->second.pho1,reco->second.pho2),  reco->second.weight);
 	 	   name="response_hgg_deltaphi"; name+=Form("_cat%d",iCat); Fill2D(name,fabs(g1.DeltaPhi(g2)),	fabs(reco->second.pho1.DeltaPhi(reco->second.pho2))	,reco->second.weight);
 	 	   name="response_hgg_y";	 name+=Form("_cat%d",iCat); Fill2D(name,hgg.Rapidity(),		reco->second.hgg.Rapidity(),reco->second.weight);
 			}
 		//fill reco histo
 			string name="reco_hgg_pt";name+=Form("_cat%d",iCat);
-			Fill(name,reco->second.hgg.Pt(),reco->second.weight);
+			Fill(name,reco->second.hgg.Pt() * 125./reco->second.hgg.M(),reco->second.weight);
 	 	   	name="reco_hgg_coststar"; name+=Form("_cat%d",iCat); Fill(name,CosThetaStar(reco->second.pho1,reco->second.pho2),  reco->second.weight);
 	 	   	name="reco_hgg_deltaphi"; name+=Form("_cat%d",iCat); Fill(name,fabs(reco->second.pho1.DeltaPhi(reco->second.pho2))	,reco->second.weight);
 	 	   	name="reco_hgg_y";	 name+=Form("_cat%d",iCat); Fill(name,reco->second.hgg.Rapidity(),reco->second.weight);
