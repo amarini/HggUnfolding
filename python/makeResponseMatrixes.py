@@ -100,28 +100,42 @@ print " >---<"
 
 #Read Bins from dat
 if DEBUG > 0: print "Going to set Bins"
+Unfolder.HistoBins.insert(ROOT.std.pair(ROOT.std.string,ROOT.Bins)('hgg_pt',ROOT.Bins()) )
 Unfolder.HistoBins['hgg_pt'].SetNonConst(); #also call malloc for *bins with 100 spaces
 iBin=0
 for pt in config['Pt']:
 	Unfolder.HistoBins['hgg_pt'].bins[iBin]=pt
-	iBin+=1;
 	Unfolder.HistoBins['hgg_pt'].nBins=iBin;
+	iBin+=1;
 
-Unfolder.HistoBins['hgg_coststar'].SetNonConst(); 
+Unfolder.HistoBins.insert(ROOT.std.pair(ROOT.std.string,ROOT.Bins)('hgg_coststar',ROOT.Bins()) )
+Unfolder.HistoBins['hgg_coststar'].SetNonConst()
 iBin=0
 for cost in config['CosThetaStar']:
 	Unfolder.HistoBins['hgg_coststar'].bins[iBin]=cost
-	iBin+=1;
 	Unfolder.HistoBins['hgg_coststar'].nBins=iBin
+	iBin+=1;
 
-Unfolder.HistoBins['hgg_y'].SetNonConst(); 
+Unfolder.HistoBins.insert(ROOT.std.pair(ROOT.std.string,ROOT.Bins)('hgg_y',ROOT.Bins()) )
+Unfolder.HistoBins['hgg_y'].SetNonConst()
 iBin=0
 for y in config['Y']:
 	Unfolder.HistoBins['hgg_y'].bins[iBin]=y
-	iBin+=1;
 	Unfolder.HistoBins['hgg_y'].nBins=iBin;
+	iBin+=1;
 
-if DEBUG > 0: print " -- "
+Unfolder.HistoBins.insert(ROOT.std.pair(ROOT.std.string,ROOT.Bins)('hgg_deltaphi',ROOT.Bins()) )
+Unfolder.HistoBins['hgg_deltaphi'].SetNonConst()
+iBin=0
+for deltaphi in config['Y']:
+	Unfolder.HistoBins['hgg_deltaphi'].bins[iBin]=deltaphi
+	Unfolder.HistoBins['hgg_deltaphi'].nBins=iBin;
+	iBin+=1;
+
+if DEBUG > 0: print " --- Bins Setted:" + str(Unfolder.HistoBins.size()) + " --- "
+if DEBUG > 1: print "pt",Unfolder.HistoBins['hgg_pt'].nBins
+if DEBUG > 1: print "y",Unfolder.HistoBins['hgg_y'].nBins
+if DEBUG > 1: print "coststar",Unfolder.HistoBins['hgg_coststar'].nBins
 ######################
 
 print "Going to Loop"

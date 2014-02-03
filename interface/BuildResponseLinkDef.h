@@ -10,6 +10,7 @@
 #pragma link C++ class Bins+ ;
 #pragma link C++ class RecoInfo+ ;
 #pragma link C++ class std::pair<std::string,std::string>+;
+#pragma link C++ class std::pair<std::map<std::string,Bins>::iterator,bool>+;//pair<map<string,Bins>::iterator,bool>
 #pragma link C++ class std::map<std::string,std::string>+;
 #pragma link C++ class std::pair<std::string,Bins>+;
 #pragma link C++ class std::map<std::string,Bins>+;

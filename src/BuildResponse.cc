@@ -47,7 +47,7 @@ int BuildResponse::InitGen(){
 	tGen->SetBranchStatus("*",0);
 	tGen->SetBranchStatus("*gp*",1);
 	tGen->SetBranchStatus("event",1);
-	tGen->SetBranchStatus("lumi",1);
+	//tGen->SetBranchStatus("lumi",1);
 	tGen->SetBranchStatus("run",1);
 	tGen->SetBranchStatus("*genjet_algo1*",1);
 	
@@ -196,8 +196,16 @@ int BuildResponse::LoopOverGen(){
 			if(reco!=recoEvents.end() ) // not matched
 				if(debug>1)cout<<"[2] hgg reco PT NOT MATCHED="<<reco->second.hgg.Pt()<<" DR o-o "<<reco->second.pho1.DeltaR( g1 ) <<" "<< reco->second.pho2.DeltaR( g2 ) << " DR x-x "<<reco->second.pho1.DeltaR( g2 )  <<" "<< reco->second.pho2.DeltaR( g1 ) <<endl;
 		}
-
+		
+		if (reco != recoEvents.end() ) recoEvents.erase(reco); // remove from the list of reco events.
 		}//loop over gen entries
+		
+		//check remaining reco events 
+		
+		for (map< pair<string,unsigned long long int>, RecoInfo>::iterator reco=recoEvents.begin(); reco!=recoEvents.end();reco++)
+		{
+		cout<<"Error: Event "<<reco->first.first<<" "<<reco->first.second <<" in RECO but not in GEN Loop"<<endl;
+		} 
 
 };
 
@@ -258,7 +266,7 @@ int BuildResponse::LoopOverRecoOptTree(){
 	tReco->SetBranchAddress("xsec_weight",&xsweight_);
 	tReco->SetBranchAddress("full_weight",&weight_);
 	tReco->SetBranchAddress("run",&run_);
-	tReco->SetBranchAddress("lumi",&lumi_);
+	//tReco->SetBranchAddress("lumi",&lumi_);
 	tReco->SetBranchAddress("event",&event_);
 	tReco->SetBranchAddress("eta1",&pho1_eta_);
 	tReco->SetBranchAddress("eta2",&pho2_eta_);
@@ -413,9 +421,31 @@ float BuildResponse::CosThetaStar(TLorentzVector &a,TLorentzVector&b)
 Bins BuildResponse::GetBins(string name)
 {
 	Bins R;
-	map<string,Bins>::iterator i=HistoBins.find(name);
-	if(i != HistoBins.end() ) return i->second;
+	string name2=name;
+	size_t n=name2.find("_cat");
+	if (n !=string::npos)
+		{//remove everything form _cat on
+		name2.erase(n,name2.end()-name2.begin());
+		}
+	n= name2.find("reco_");
+	if (n !=string::npos)name2.erase(0,5);
+	n= name2.find("gen_");
+	if (n !=string::npos)name2.erase(0,4);
+	n= name2.find("response_");
+	if (n !=string::npos)name2.erase(0,9);
+	
+	if (debug>1) cout<<"[2] Bins will be taken from "<<name2 <<" instead of "<<name<<endl;
 
+	map<string,Bins>::iterator i=HistoBins.find(name2);
+	if(i != HistoBins.end() ) return i->second;
+	
+	if (debug>0)
+		{
+		cout<<"[1] DEFAULT BINNING FOR " <<name <<endl;
+		for(i = HistoBins.begin();i!=HistoBins.end();i++)
+			cout<<"[1] Histo Bins "<< i->first <<endl;
+		}
+		
 	if( name.find("hgg_pt")!=string::npos)		{R.nBins=60; R.xMin=0;R.xMax=120;}
 	else if( name.find("hgg_coststar")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=1;}
 	else if( name.find("hgg_deltaphi")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=3.1416;}
@@ -476,7 +506,8 @@ void BuildResponse::SetCatsModulo(int M)
 		}
 	for( int iCat = 0 ;iCat < nCat ;iCat++)
 	{
-		SetCat(iCat, iCat%M);
+		//SetCat(iCat, iCat%M);
+		SetCat(iCat, iCat/M);
 	}
 	return;
 }
