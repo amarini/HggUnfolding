@@ -197,7 +197,10 @@ int BuildResponse::LoopOverGen(){
 				if(debug>1)cout<<"[2] hgg reco PT NOT MATCHED="<<reco->second.hgg.Pt()<<" DR o-o "<<reco->second.pho1.DeltaR( g1 ) <<" "<< reco->second.pho2.DeltaR( g2 ) << " DR x-x "<<reco->second.pho1.DeltaR( g2 )  <<" "<< reco->second.pho2.DeltaR( g1 ) <<endl;
 		}
 		
-		if (reco != recoEvents.end() ) recoEvents.erase(reco); // remove from the list of reco events.
+		if (reco != recoEvents.end() ){
+			recoEvents.erase(reco); // remove from the list of reco events.
+			if (debug>1) cout<<"[2x] weights: xs full ratio: " << xsweight<< " - "<<reco->second.weight <<" - "<< reco->second.weight/xsweight<<endl;
+			}
 		}//loop over gen entries
 		
 		//check remaining reco events 
@@ -507,7 +510,8 @@ void BuildResponse::SetCatsModulo(int M)
 	for( int iCat = 0 ;iCat < nCat ;iCat++)
 	{
 		//SetCat(iCat, iCat%M);
-		SetCat(iCat, iCat/M);
+		if(debug >0 ) cout<< "Setting Cat "<<iCat <<" to "<<iCat/M<<endl;
+		SetCat(iCat, (iCat/M) * M); //integer division
 	}
 	return;
 }
