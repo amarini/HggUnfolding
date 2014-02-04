@@ -120,6 +120,7 @@ int BuildResponse::LoopOverGen(){
 			}
 
 		//get xsWeight: fileName & xsWeight
+		string fName=tGen->GetCurrentFile()->GetName();	
 		string dName=tGen->GetCurrentFile()->GetName();	
 		//remove /*
 		size_t n=dName.rfind('/');
@@ -131,21 +132,19 @@ int BuildResponse::LoopOverGen(){
 		if(debug>1)cout<<"[2] Dir = "<<dName<<endl;
 		if ( xSecMapDirToNam.find(dName) == xSecMapDirToNam.end())
 			{
-			cout<<" ----- ERROR -------"<<endl;
-			cout<<"Dir Name="<<dName<<endl;
+			cout<<"[E] Dir Name="<<dName<<endl;
 			for(map<string,string>::iterator it= xSecMapDirToNam.begin();it!=xSecMapDirToNam.end();it++)
-				cout<<"xSecMapDirToNam "<<it->first <<" --- "<<it->second<<endl;
+				cout<<"[E] xSecMapDirToNam "<<it->first <<" --- "<<it->second<<endl;
 			}
 		assert( xSecMapDirToNam.find(dName) != xSecMapDirToNam.end() );
 		string xSecName=xSecMapDirToNam[dName];
 
 		if( xSecWeight.find(xSecName) == xSecWeight.end() )
 			{
-			cout<<"------ ERROR -------" <<endl;
-			cout<<"dir= "<<dName<<endl;
-			cout<<"xSecName= "<<xSecName<<endl;
+			cout<<"[E] Dir= "<<dName<<endl;
+			cout<<"[E] xSecName= "<<xSecName<<endl;
 			for(map<string,float>::iterator it= xSecWeight.begin();it!=xSecWeight.end();it++)
-				cout<<"xSecWeight "<<it->first <<" --- "<<it->second<<endl;
+				cout<<"[E] xSecWeight "<<it->first <<" --- "<<it->second<<endl;
 			}
 		assert( xSecWeight.find(xSecName) != xSecWeight.end() );	
 		float xsweight=xSecWeight[xSecName];
@@ -155,6 +154,8 @@ int BuildResponse::LoopOverGen(){
 		bool isGen=true;
 		// ph. sp. selection on photons 
 		if (isGen){
+
+		   perFileEff[pair<string,string>(dName,fName)].second+=1; //I need the eff wrt the n. of files. Used for debug
 
 	 	   string name="gen_hgg_pt"; Fill(name,hgg.Pt() * 125./ hgg.M(),xsweight);
 	 	   name="gen_hgg_coststar"; Fill(name,CosThetaStar(g1,g2),xsweight);
@@ -176,6 +177,7 @@ int BuildResponse::LoopOverGen(){
 			int iCat=-1;
 			if(catMap.size()>0){iCat=catMap[reco->second.cat]; }
 			assert(iCat<catMap.size());
+		   perFileEff[pair<string,string>(dName,fName)].first+=1; //I need the eff wrt the n. of files. Used for debug
 		//fill maitrix
 			if( isGen){
 			   string name="response_hgg_pt";name+=Form("_cat%d",iCat);
@@ -207,7 +209,18 @@ int BuildResponse::LoopOverGen(){
 		
 		for (map< pair<string,unsigned long long int>, RecoInfo>::iterator reco=recoEvents.begin(); reco!=recoEvents.end();reco++)
 		{
-		cout<<"Error: Event "<<reco->first.first<<" "<<reco->first.second <<" in RECO but not in GEN Loop"<<endl;
+		cout<<"[E] Event "<<reco->first.first<<" "<<reco->first.second <<" in RECO but not in GEN Loop"<<endl;
+		} 
+
+		//check for orphan files at gen level
+		for ( map< pair<string,string>, pair<double,double> >::iterator eff=perFileEff.begin(); eff!=perFileEff.end();eff++)
+		{
+		string fName=eff->first.second;		
+		string dName=eff->first.first;	
+		double e = eff->second.first / eff->second.second;
+		if (e < 0.01) cout<<"[E]";
+		else if (e < 0.1) cout<<"[W]";
+		if( e<0.1) cout <<" eff in file "<<fName<<" is "<<e*100<<"%"<<endl;
 		} 
 
 };
@@ -323,7 +336,7 @@ int BuildResponse::LoopOverReco(){
 		{
 		if(debug>1)cout<<"[2] Loop Over Reco: File "<<*iFile<<endl;
 		FILE *fr=fopen(iFile->c_str(),"r");
-		if (fr == NULL) fprintf(stderr,"Error file %s does not exist\n",iFile->c_str());
+		if (fr == NULL) fprintf(stdout,"[E] file %s does not exist\n",iFile->c_str());
 		char buf[2048]; //max length of buffer-line
 		while(fgets(buf,2048,fr)!=NULL)
 			{
@@ -504,7 +517,7 @@ void BuildResponse::SetCatsModulo(int M)
 	int nCat=catMap.size();
 	if( nCat % M != 0 ) 
 		{
-		cout<<"error nCats" <<nCat<<" not modulo "<<M<<endl;
+		cout<<"[E] nCats" <<nCat<<" not modulo "<<M<<endl;
 		return;
 		}
 	for( int iCat = 0 ;iCat < nCat ;iCat++)

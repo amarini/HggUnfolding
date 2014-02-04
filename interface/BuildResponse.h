@@ -93,6 +93,8 @@ private:
 	vector<int> catMap;
 	map<string,float> xSecWeight; 
 	set<string> histoToSave;
+	//check orphans
+	map< pair<string,string> ,pair<double,double> > perFileEff; //numbers are pass/tot
 public:
 	ClassDef(BuildResponse,1);
 };
