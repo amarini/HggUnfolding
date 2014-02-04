@@ -218,9 +218,11 @@ int BuildResponse::LoopOverGen(){
 		string fName=eff->first.second;		
 		string dName=eff->first.first;	
 		double e = eff->second.first / eff->second.second;
-		if (e < 0.01) cout<<"[E]";
-		else if (e < 0.1) cout<<"[W]";
-		if( e<0.1) cout <<" eff in file "<<fName<<" is "<<e*100<<"%"<<endl;
+		if (e < 0.01) cout<<"[E]"; //error
+		else if (e < 0.1) cout<<"[W]"; //warning
+		else if (debug>0) cout << "[1]"; //info - level 1
+
+		if( e<0.1 || debug>0) cout <<" eff in file "<<fName<<" is "<<e*100<<"%"<<endl;
 		} 
 
 };
