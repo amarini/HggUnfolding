@@ -13,6 +13,8 @@
 #include "TMath.h"
 #include "TObject.h"
 
+#include "Math/Functor.h"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -28,7 +30,8 @@ public:
 	void Reset(); 
 	TVectorD Unfold(TMatrixD *E=NULL);
 	TH1D* UnfoldMinimum(); 
-	TH1D* UnfoldLogLikelihoodMinimum();
+	TH1D* UnfoldLogLikelihoodMinimum( ROOT::Math::Functor &f );
+	//TH1D* UnfoldLogLikelihoodMinimum( int nPar , double likelihood(const double*));
 	TH1D* getHisto(TVectorD &v, TMatrixD &e); 
 	TH1D* UnfoldSvd(vector<int> v_kreg);	
 	TH1D* UnfoldBayes(int niter=3);// use RooUnfold and merge

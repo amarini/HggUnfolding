@@ -448,11 +448,52 @@ TH1D* MergeAndUnfold::UnfoldBayes(int niter){
 }
 
 
-TH1D* MergeAndUnfold::UnfoldLogLikelihoodMinimum(){
+#include "Math/Minimizer.h"
+#include "Math/Functor.h"
+#include "Math/Factory.h"
+
+//double likelihood(const double *x)
+//{
+//	return x[0]*x[1];
+//}
+
+TH1D* MergeAndUnfold::UnfoldLogLikelihoodMinimum( ROOT::Math::Functor &f ){
+	int nPar = 10;
 	FillVectors();
 	ConstructSuperMatrixes();
 	// I need to have a likelihood function to minimize 
-	TH1D * r;//=(TH1D*);
+	TVectorD v; TMatrixD e;
+	
+	ROOT::Math::Minimizer* min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
+	
+	min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2 
+	min->SetMaxIterations(10000);  // for GSL 
+	min->SetTolerance(0.001);
+	min->SetPrintLevel(1);
+	
+	//ROOT::Math::Functor f(&likelihood,nPar);
+	double step[nPar] ;
+	double variable[nPar];
+	for(int i=0;i<nPar;i++)
+		{
+		step[i] =0.001;
+		variable[i]=0;
+		}
+	min->SetFunction(f);
+	
+	const double *xs = min->X();
+	v.ResizeTo( v_g[0].GetNrows() );
+	for(int i=0;i<v_g[0].GetNrows();i++)
+		v(i)=xs[i];
+	
+	// probably wrong. TODO. do it with contour +1
+	e.ResizeTo( v_g[0].GetNrows() , v_g[0].GetNrows() );
+	for(int i=0;i<v_g[0].GetNrows();i++)
+	for(int j=0;j<v_g[0].GetNrows();j++)
+		e(i,j)=min->CovMatrix(i,j);
+	
+	TH1D * r=getHisto(v,e);
 	return r;	
 
 }
+
