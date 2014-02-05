@@ -1,10 +1,7 @@
-#---
-# 
-#---
-#Unfolder.xSecMapDirToNam["GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1"]="ggh_m125_8TeV"
-#Unfolder.genFiles.push_back('root://eoscms///store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/GluGluToHToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root')
+#-------------------------------------#
+#  Build Response configuration file  #
+#-------------------------------------#
 
-DataFiles=/store/user/chanon/HGG/DiffAnaWorkSpaces/CMS-HGG_v1PtScaled.root
 RecoFiles=/store/user/chanon/HGG/DiffAnaWorkSpaces/histograms_CMS-HGG_PtYggCosthetastar.root
 GenFiles=/store/group/phys_higgs/cmshgg/V15_00_11/ExtraMaterial/GluGluToHToGG_M-125_StdMaterial/*.root,/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root,/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root,/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2/*.root
 Map=ggh_m125_8TeV,vbf_m125_8TeV,tth_m125_8TeV,wzh_m125_8TeV
@@ -15,3 +12,20 @@ Pt=0.,20.,35.,60.,130.,400
 Y=0,0.5,1.0,1.5,2.0,3.5,4.5
 CosThetaStar=0,0.3,0.6,0.8,1.0
 DeltaPhi=0,0.5,1.0,1.5,2.0,2.5,3.1416
+
+#------ Gen Level Fiducial region ------#
+Pho1Pt=41.66
+Pho2Pt=31.25
+PhoEta=2.5
+PhoIso=5
+PhoIsoDR=0.3
+
+#-------------------#
+#  So far not used  #
+#-------------------#
+
+DataFiles=/store/user/chanon/HGG/DiffAnaWorkSpaces/CMS-HGG_v1PtScaled.root
+JetPtCut=25;
+JetPhoDR=0.3;
+
+

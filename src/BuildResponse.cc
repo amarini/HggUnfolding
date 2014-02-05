@@ -67,8 +67,6 @@ int BuildResponse::LoopOverGen(){
 	//JETS
 	Int_t gjets_n;tGen->SetBranchAddress("genjet_algo1_n",&gjets_n);
 	TClonesArray *gjets_p4=0; tGen->SetBranchAddress("genjet_algo1_p4",&gjets_p4);
-	Float_t JetPtCut=25; //TO MAKE CONFIGURABLE
-	Float_t JetPhoDR=0.3;
 
 	if(debug>0) cout<<"[1] Loop Over Gen"<< endl;
 	if(debug>1) cout<<"[2] GenEntries " << tGen->GetEntries()<<endl;
@@ -103,6 +101,16 @@ int BuildResponse::LoopOverGen(){
 		TLorentzVector g1= *((TLorentzVector*)(gp_p4->At(pho1)));
 		TLorentzVector g2= *((TLorentzVector*)(gp_p4->At(pho2)));
 		TLorentzVector hgg = g1+g2; 
+
+		//compute isolation for photons
+		float pho1Iso=0,pho2Iso=0;
+		for(int igp=0;igp< gp_n ;igp++)
+			{
+			if ( gp_status[igp] != 1) continue;
+			if ( gp_pdgid[igp] == 12 || gp_pdgid[igp]==14 || gp_pdgid[igp]==16) continue; //neutrinos
+			if ( g1.DeltaR( *((TLorentzVector*)(gp_p4->At(igp))) ) < PhoIsoDR && pho1 !=igp ) pho1Iso += ((TLorentzVector*)(gp_p4->At(igp)))->Pt();
+			if ( g2.DeltaR( *((TLorentzVector*)(gp_p4->At(igp))) ) < PhoIsoDR && pho2 !=igp ) pho1Iso += ((TLorentzVector*)(gp_p4->At(igp)))->Pt();
+			}
 
 		//find  jet related quontities
 		Int_t nJets=0;
@@ -152,6 +160,13 @@ int BuildResponse::LoopOverGen(){
 		if(debug>1)cout<<"[2] xSec "<<xSecName<<" "<< dName<<" "<< xSecWeight[xSecName]<<endl;
 
 		bool isGen=true;
+		if( fabs(g1.Eta())> PhoEtaCut ) isGen=false;
+		if( fabs(g2.Eta())> PhoEtaCut ) isGen=false;
+		if( fabs(g1.Pt()) < Pho1PtCut ) isGen=false;
+		if( fabs(g2.Pt()) < Pho2PtCut ) isGen=false;
+		if( pho1Iso >= PhoIsoCut ) isGen=false;
+		if( pho2Iso >= PhoIsoCut ) isGen=false;
+
 		// ph. sp. selection on photons 
 		if (isGen){
 
