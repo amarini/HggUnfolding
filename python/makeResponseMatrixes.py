@@ -95,8 +95,8 @@ if DEBUG>0:
 	print 'Unfolder.JetPhoDR',Unfolder.JetPhoDR
 	print 'Unfolder.PhoIsoDR',Unfolder.PhoIsoDR
 	print 'Unfolder.PhoIsoCut',Unfolder.PhoIsoCut
-	print 'Unfolder.Pho1Cut',Unfolder.Pho1Cut
-	print 'Unfolder.Pho2Cut',Unfolder.Pho2Cut
+	print 'Unfolder.Pho1Cut',Unfolder.Pho1PtCut
+	print 'Unfolder.Pho2Cut',Unfolder.Pho2PtCut
 	print 'Unfolder.PhoEtaCut',Unfolder.PhoEtaCut
 
 

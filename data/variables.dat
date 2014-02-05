@@ -19,13 +19,13 @@ Pho2Pt=31.25
 PhoEta=2.5
 PhoIso=5
 PhoIsoDR=0.3
+JetPtCut=25
+JetPhoDR=0.3
 
 #-------------------#
 #  So far not used  #
 #-------------------#
 
 DataFiles=/store/user/chanon/HGG/DiffAnaWorkSpaces/CMS-HGG_v1PtScaled.root
-JetPtCut=25;
-JetPhoDR=0.3;
 
 
