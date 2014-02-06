@@ -179,8 +179,12 @@ print "Going to Loop"
 Unfolder.LoopOverRecoOptTree(); 
 Unfolder.LoopOverGen();
 
-print "Going to Write"
-Unfolder.Write("UnfoldMatrixes.root");
+outFile='UnfoldMatrixes.root'
+try: outFile=config['OutFile']
+except: pass
+
+print "Going to Write to "+ outFile
+Unfolder.Write(outFile);
 
 print " --- DONE ---"
 

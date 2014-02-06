@@ -87,6 +87,7 @@ public:
 	Float_t PhoEtaCut=2.5;
 	Float_t Pho1PtCut=41.66;
 	Float_t Pho2PtCut=31.25;
+	Float_t PhoDRMatch=0.3;
 	
 private:
 	TChain *tGen;
@@ -107,6 +108,7 @@ private:
 	set<string> histoToSave;
 	//check orphans
 	map< pair<string,string> ,pair<double,double> > perFileEff; //numbers are pass/tot
+	map<string,double> cutEff;
 public:
 	ClassDef(BuildResponse,1);
 };

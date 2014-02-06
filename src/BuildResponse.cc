@@ -69,11 +69,12 @@ int BuildResponse::LoopOverGen(){
 	TClonesArray *gjets_p4=0; tGen->SetBranchAddress("genjet_algo1_p4",&gjets_p4);
 
 	if(debug>0) cout<<"[1] Loop Over Gen"<< endl;
-	if(debug>1) cout<<"[2] GenEntries " << tGen->GetEntries()<<endl;
+	if(debug>0) cout<<"[1] GenEntries " << tGen->GetEntries()<<endl;
 	for (long long iEntry=0; iEntry < tGen->GetEntries() ; iEntry++ )
 		{
 		if(debug>1)cout<<"[2] Loop Over Gen: "<<iEntry<<endl;
 		tGen->GetEntry(iEntry);
+		cutEff["GEN_0"]+=1;
 		int pho1=-1,pho2=-1;
 		if(debug>1)cout<<"[2] Got Entry "<<iEntry<<" - event:"<<eventNum<<endl;
 		for(int igp=0;igp< gp_n ;igp++)
@@ -97,10 +98,12 @@ int BuildResponse::LoopOverGen(){
 
 				}
 		if(debug>1)cout<<"[2] selection "<<pho1<<" "<<pho2<<endl;
-		if (pho1 <0 || pho2 < 0) continue; 
+		if ( (pho1 <0 || pho2 < 0) &&debug>0 )cout<<"[1] event "<< eventNum <<" in file "<<tGen->GetCurrentFile()->GetName()<<" DOES NOT HAVE 2 Higgs Photons"<<endl;
+		if (pho1 <0 || pho2 < 0)continue; 
 		TLorentzVector g1= *((TLorentzVector*)(gp_p4->At(pho1)));
 		TLorentzVector g2= *((TLorentzVector*)(gp_p4->At(pho2)));
 		TLorentzVector hgg = g1+g2; 
+		cutEff["GEN_1_2pho"]+=1;
 
 		//compute isolation for photons
 		float pho1Iso=0,pho2Iso=0;
@@ -156,7 +159,8 @@ int BuildResponse::LoopOverGen(){
 			}
 		assert( xSecWeight.find(xSecName) != xSecWeight.end() );	
 		float xsweight=xSecWeight[xSecName];
-
+		
+		assert(xsweight>0);
 		if(debug>1)cout<<"[2] xSec "<<xSecName<<" "<< dName<<" "<< xSecWeight[xSecName]<<endl;
 
 		bool isGen=true;
@@ -169,6 +173,7 @@ int BuildResponse::LoopOverGen(){
 
 		// ph. sp. selection on photons 
 		if (isGen){
+		   cutEff["GEN_2_isGen"]+=1;
 
 		   perFileEff[pair<string,string>(dName,fName)].second+=1; //I need the eff wrt the n. of files. Used for debug
 
@@ -176,30 +181,35 @@ int BuildResponse::LoopOverGen(){
 	 	   name="gen_hgg_coststar"; Fill(name,CosThetaStar(g1,g2),xsweight);
 	 	   name="gen_hgg_deltaphi"; Fill(name,fabs(g1.DeltaPhi(g2)),xsweight);
 	 	   name="gen_hgg_y"; Fill(name,hgg.Rapidity(),xsweight);
+	 	   name="gen_hgg_m"; Fill(name,hgg.M(),xsweight);
 
 		//fill matrix and reco(no corrections for bkg);
 		//do the matching to the photons 
 		} //end ph. sp. selection on gen photons
 		map< pair<string,unsigned long long int>, RecoInfo>::iterator reco=recoEvents.find(pair<string,unsigned long long>(xSecName,eventNum ));
 		if(debug>2) cout<<"[3] Gen Entry "<<xSecName<<":"<<eventNum<<endl;
-
+		if(reco!=recoEvents.end()) 
+		   	cutEff["GEN_2_isReco"]+=1;
 		if  (reco!=recoEvents.end() &&
-			(
-			 ( reco->second.pho1.DeltaR( g1 ) <0.3 && reco->second.pho2.DeltaR( g2 ) <0.3) ||  //match pho1->pho1 pho2->pho2
-			 ( reco->second.pho1.DeltaR( g2 ) <0.3 && reco->second.pho2.DeltaR( g1 ) <0.3) //match pho1->pho2 pho2->pho1
+			( //no matching: not present in the signal model
+			 ( reco->second.pho1.DeltaR( g1 ) <PhoDRMatch && reco->second.pho2.DeltaR( g2 ) <PhoDRMatch) ||  //match pho1->pho1 pho2->pho2
+			 ( reco->second.pho1.DeltaR( g2 ) <PhoDRMatch && reco->second.pho2.DeltaR( g1 ) <PhoDRMatch) //match pho1->pho2 pho2->pho1
 			)
 		    ){
+		   	cutEff["GEN_3_isRecoMatched"]+=1;
 			int iCat=-1;
 			if(catMap.size()>0){iCat=catMap[reco->second.cat]; }
 			assert(iCat<catMap.size());
 		   perFileEff[pair<string,string>(dName,fName)].first+=1; //I need the eff wrt the n. of files. Used for debug
 		//fill maitrix
 			if( isGen){
+		   	   cutEff["GEN_4_isRecoAndGen"]+=1;
 			   string name="response_hgg_pt";name+=Form("_cat%d",iCat);
 			   Fill2D(name, hgg.Pt() *125./hgg.M() , reco->second.hgg.Pt()* 125./reco->second.hgg.M()  , reco->second.weight);
 	 	   name="response_hgg_coststar"; name+=Form("_cat%d",iCat); Fill2D(name,CosThetaStar(g1,g2),	CosThetaStar(reco->second.pho1,reco->second.pho2),  reco->second.weight);
 	 	   name="response_hgg_deltaphi"; name+=Form("_cat%d",iCat); Fill2D(name,fabs(g1.DeltaPhi(g2)),	fabs(reco->second.pho1.DeltaPhi(reco->second.pho2))	,reco->second.weight);
 	 	   name="response_hgg_y";	 name+=Form("_cat%d",iCat); Fill2D(name,hgg.Rapidity(),		reco->second.hgg.Rapidity(),reco->second.weight);
+	 	   name="response_hgg_m";	 name+=Form("_cat%d",iCat); Fill2D(name,hgg.M(),		reco->second.hgg.M(),reco->second.weight);
 			}
 		//fill reco histo
 			string name="reco_hgg_pt";name+=Form("_cat%d",iCat);
@@ -207,11 +217,21 @@ int BuildResponse::LoopOverGen(){
 	 	   	name="reco_hgg_coststar"; name+=Form("_cat%d",iCat); Fill(name,CosThetaStar(reco->second.pho1,reco->second.pho2),  reco->second.weight);
 	 	   	name="reco_hgg_deltaphi"; name+=Form("_cat%d",iCat); Fill(name,fabs(reco->second.pho1.DeltaPhi(reco->second.pho2))	,reco->second.weight);
 	 	   	name="reco_hgg_y";	 name+=Form("_cat%d",iCat); Fill(name,reco->second.hgg.Rapidity(),reco->second.weight);
+			name="reco_hgg_m";name+=Form("_cat%d",iCat); Fill(name,reco->second.hgg.M(),reco->second.weight);
 			} //exists reco and matched to gen level
 		else{
 			//not matched  or not exists -- only debug
 			if(reco!=recoEvents.end() ) // not matched
-				if(debug>1)cout<<"[2] hgg reco PT NOT MATCHED="<<reco->second.hgg.Pt()<<" DR o-o "<<reco->second.pho1.DeltaR( g1 ) <<" "<< reco->second.pho2.DeltaR( g2 ) << " DR x-x "<<reco->second.pho1.DeltaR( g2 )  <<" "<< reco->second.pho2.DeltaR( g1 ) <<endl;
+				{
+				if(debug>1)cout<<"[2x] hgg reco PT NOT MATCHED="<<reco->second.hgg.Pt()<<" DR o-o "<<reco->second.pho1.DeltaR( g1 ) <<" "<< reco->second.pho2.DeltaR( g2 ) << " DR x-x "<<reco->second.pho1.DeltaR( g2 )  <<" "<< reco->second.pho2.DeltaR( g1 ) <<endl;
+				if(debug>1)cout<<"[2x] hgg M Truth="<<hgg.M()<<" Reco="<<reco->second.hgg.M()<<endl;
+
+				int iCat=-1;
+				if(catMap.size()>0){iCat=catMap[reco->second.cat]; }
+				assert(iCat<catMap.size());
+				string name="notmatched_hgg_pt";name+=Form("_cat%d",iCat); Fill(name,reco->second.hgg.Pt(),reco->second.weight);
+				name="notmatched_hgg_m";name+=Form("_cat%d",iCat); Fill(name,reco->second.hgg.M(),reco->second.weight);
+				}
 		}
 		
 		if (reco != recoEvents.end() ){
@@ -220,25 +240,6 @@ int BuildResponse::LoopOverGen(){
 			}
 		}//loop over gen entries
 		
-		//check remaining reco events 
-		
-		for (map< pair<string,unsigned long long int>, RecoInfo>::iterator reco=recoEvents.begin(); reco!=recoEvents.end();reco++)
-		{
-		cout<<"[E] Event "<<reco->first.first<<" "<<reco->first.second <<" in RECO but not in GEN Loop"<<endl;
-		} 
-
-		//check for orphan files at gen level
-		for ( map< pair<string,string>, pair<double,double> >::iterator eff=perFileEff.begin(); eff!=perFileEff.end();eff++)
-		{
-		string fName=eff->first.second;		
-		string dName=eff->first.first;	
-		double e = eff->second.first / eff->second.second;
-		if (e < 0.01) cout<<"[E]"; //error
-		else if (e < 0.1) cout<<"[W]"; //warning
-		else if (debug>0) cout << "[1]"; //info - level 1
-
-		if( e<0.1 || debug>0) cout <<" eff in file "<<fName<<" is "<<e*100<<"%"<<endl;
-		} 
 
 };
 
@@ -318,6 +319,7 @@ int BuildResponse::LoopOverRecoOptTree(){
 
 	for(Int_t iEntry=0;iEntry<tReco->GetEntries();iEntry++)
 	{
+	cutEff["RECO_0"]+=1;
 	tReco->GetEntry(iEntry);
 	Nam_=tReco->GetTree()->GetName();
 			TLorentzVector pho1,pho2,hgg; 
@@ -327,6 +329,9 @@ int BuildResponse::LoopOverRecoOptTree(){
 			hgg=pho1+pho2;
 			RecoInfo A(hgg,pho1,pho2,cat_,weight_);
 			if(debug>2) cout<<"[3] hgg reco PT="<< hgg.Pt()<<endl;
+			//map<pair<string,unsigned long long>,RecoInfo>::iterator it;
+			if( recoEvents.find(pair<string,unsigned long long >(Nam_,event_)) != recoEvents.end())
+				 cout<<"[E] event "<<Nam_<<":"<<event_<<" already exists"<<endl;
 			recoEvents[pair<string,unsigned long long >(Nam_,event_)]=A;
 			if(debug>1) cout<<"[2] recoEvents"<<recoEvents.size()<<endl;
 			if(xsweight_>0)
@@ -337,6 +342,7 @@ int BuildResponse::LoopOverRecoOptTree(){
 			assert(weight_>0);
 			assert(xsweight_>0);
 	}
+	if (debug>0) cout<<"[1] TOT HGG RECO EVENTS="<<recoEvents.size()<<endl;
 	return 0 ;
 
 }
@@ -429,6 +435,32 @@ int BuildResponse::LoopOverReco(){
 };
 
 int BuildResponse::Write(string output){
+		//check remaining reco events  -- mv in Write
+		
+		for (map< pair<string,unsigned long long int>, RecoInfo>::iterator reco=recoEvents.begin(); reco!=recoEvents.end();reco++)
+		{
+		cout<<"[E] Event "<<reco->first.first<<" "<<reco->first.second <<" in RECO but not in GEN Loop"<<endl;
+		} 
+
+		//check for orphan files at gen level
+		for ( map< pair<string,string>, pair<double,double> >::iterator eff=perFileEff.begin(); eff!=perFileEff.end();eff++)
+		{
+		string fName=eff->first.second;		
+		string dName=eff->first.first;	
+		double e = eff->second.first / eff->second.second;
+		if (e < 0.01) cout<<"[E]"; //error
+		else if (e < 0.1) cout<<"[W]"; //warning
+		else if (debug>0) cout << "[1]"; //info - level 1
+
+		if( e<0.1 || debug>0) cout <<" eff in file "<<fName<<" is "<<e*100<<"%"<<endl;
+		} 
+		
+		if(debug>0)
+		for(map<string,double>::iterator it=cutEff.begin();it!=cutEff.end();it++ )
+		{
+		cout<<"[1] -- CUT -->"<<it->first<<" : "<<it->second<<endl;	
+		}
+	//Real Write to a file
 	TFile *out=TFile::Open(output.c_str(),"RECREATE");
 	out->cd();
 for (set<string>::iterator hName=histoToSave.begin();hName!=histoToSave.end();hName++)
@@ -483,6 +515,7 @@ Bins BuildResponse::GetBins(string name)
 	else if( name.find("hgg_coststar")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=1;}
 	else if( name.find("hgg_deltaphi")!=string::npos)	{R.nBins=5; R.xMin=0;R.xMax=3.1416;}
 	else if( name.find("hgg_y")!=string::npos)		{R.nBins=5; R.xMin=0;R.xMax=5;}
+	else if( name.find("hgg_m")!=string::npos)		{R.nBins=2000; R.xMin=0;R.xMax=200;}
 	else {
 		if(debug>0) cout<<"[1] Observable "<<name<<" unknown binnig"<<endl;
 		R.nBins=100;R.xMin=0;R.xMax=100;

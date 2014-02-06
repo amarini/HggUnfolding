@@ -25,6 +25,9 @@ def ReadDat(inputFileName):
 		#float
 		if parts[0]=='Pho1Pt' or parts[0] == 'Pho2Pt' or parts[0]=='PhoEta' or parts[0]=='PhoIso' or parts[0]=='PhoIsoDR' or parts[0]=='JetPtCut' or parts[0] == 'JetPhoDR':
 			R[ parts[0] ] = float(parts[1])
+		#string
+		if parts[0]=='OutFile' :
+			R[ parts[0] ] = parts[1]
 	return R
 
 def PrintDat(dat):
