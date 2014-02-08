@@ -2,7 +2,7 @@
 #  Build Response configuration file  #
 #-------------------------------------#
 
-RecoFiles=/store/user/chanon/HGG/DiffAnaWorkSpaces/histograms_CMS-HGG_PtYggCosthetastar.root
+RecoFiles=/store/user/chanon/HGG/DiffAnaWorkSpaces/histograms_CMS-HGG_v3OptTreesMC.root
 GenFiles=/store/group/phys_higgs/cmshgg/V15_00_11/ExtraMaterial/GluGluToHToGG_M-125_StdMaterial/*.root,/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/VBF_HToGG_M-125_8TeV-powheg-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root,/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/TTH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v1/*.root,/store/group/phys_higgs/cmshgg//processed/V15_00_08/mc/Summer12_RD1/WH_ZH_HToGG_M-125_8TeV-pythia6_Summer12_DR53X-PU_RD1_START53_V7N-v2/*.root
 Map=ggh_m125_8TeV,vbf_m125_8TeV,tth_m125_8TeV,wzh_m125_8TeV
 
