@@ -68,6 +68,7 @@ public:
 	int InitRecoOptTree(); // not completely implemented
 	int LoopOverRecoOptTree(); // not completely implemented
 	int Write(string output);
+	int Log(string filename){freopen(filename.c_str(), "a", stdout);};
 	void SetDebug(int debug_){debug=debug_;};
 	void SetNcat(int ncat){catMap.resize(ncat);for(int i=0;i<ncat;i++)catMap[i]=i;}; //give to each cat a cat
 	void SetCat(int iCat,int jCat){if( (iCat >= catMap.size() )||(jCat >=catMap.size()))return ; 
@@ -76,6 +77,18 @@ public:
 	
 	map<string,string> xSecMapDirToNam;
 	map<string,Bins> HistoBins; //fill this to make it configurable from a dat file
+	
+	//configurable cuts for gen level selection:
+
+	Float_t JetPtCut=25; //TO MAKE CONFIGURABLE
+	Float_t JetPhoDR=0.3;
+	Float_t PhoIsoDR=0.3;
+	Float_t PhoIsoCut=5;
+	Float_t PhoEtaCut=2.5;
+	Float_t Pho1PtCut=41.66;
+	Float_t Pho2PtCut=31.25;
+	Float_t PhoDRMatch=0.3;
+	
 private:
 	TChain *tGen;
 	TChain *tReco;
@@ -93,6 +106,9 @@ private:
 	vector<int> catMap;
 	map<string,float> xSecWeight; 
 	set<string> histoToSave;
+	//check orphans
+	map< pair<string,string> ,pair<double,double> > perFileEff; //numbers are pass/tot
+	map<string,double> cutEff;
 public:
 	ClassDef(BuildResponse,1);
 };

@@ -45,6 +45,9 @@ ROOT.gSystem.Load("libUnfolding.so")
 
 Unfolder = ROOT.BuildResponse();
 
+if options.logfile:
+	Unfolder.Log(options.logfile)
+
 Unfolder.SetDebug(DEBUG);
 
 
@@ -70,6 +73,31 @@ Unfolder.SetCatsModulo(config['CatMod']); #~n. of cat per bin
 #Unfolder.SetCat(3 ,3);
 #Unfolder.SetCat(7 ,3);
 #Unfolder.SetCat(11 ,3);
+
+try:Unfolder.JetPtCut=config['JetPtCut']
+except: pass
+try:Unfolder.JetPhoDR=config['JetPhoDR']
+except: pass
+try:Unfolder.PhoIsoDR=config['PhoIsoDR']
+except: pass
+try:Unfolder.PhoIsoCut=config['PhoIso']
+except: pass
+try:Unfolder.Pho1PtCut=config['Pho1Pt']
+except: pass
+try:Unfolder.Pho2PtCut=config['Pho2Pt']
+except: pass
+try:Unfolder.PhoEtaCut=config['PhoEta']
+except: pass
+
+if DEBUG>0:
+	print '--- ph space configuration ---'
+	print 'Unfolder.JetPtCut',Unfolder.JetPtCut
+	print 'Unfolder.JetPhoDR',Unfolder.JetPhoDR
+	print 'Unfolder.PhoIsoDR',Unfolder.PhoIsoDR
+	print 'Unfolder.PhoIsoCut',Unfolder.PhoIsoCut
+	print 'Unfolder.Pho1Cut',Unfolder.Pho1PtCut
+	print 'Unfolder.Pho2Cut',Unfolder.Pho2PtCut
+	print 'Unfolder.PhoEtaCut',Unfolder.PhoEtaCut
 
 
 print "Adding map information -> ggh_8TeV"
@@ -151,8 +179,12 @@ print "Going to Loop"
 Unfolder.LoopOverRecoOptTree(); 
 Unfolder.LoopOverGen();
 
-print "Going to Write"
-Unfolder.Write("UnfoldMatrixes.root");
+outFile='UnfoldMatrixes.root'
+try: outFile=config['OutFile']
+except: pass
+
+print "Going to Write to "+ outFile
+Unfolder.Write(outFile);
 
 print " --- DONE ---"
 
